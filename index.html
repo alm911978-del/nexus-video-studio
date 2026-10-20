@@ -49,5 +49,4 @@ document.addEventListener('click',async e=>{let d=e.target.dataset;if(d.del){if(
 $('exportData').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nexus-video-backup.json';a.click();URL.revokeObjectURL(a.href);$('backupStatus').textContent='تم تجهيز ملف النسخة الاحتياطية.'};
 $('importButton').onclick=()=> $('importFile').click();$('importFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(!x||!Array.isArray(x.projects)||!Array.isArray(x.characters)||!Array.isArray(x.scenes))throw Error();if(!confirm('سيستبدل الاستيراد البيانات الحالية. هل تريد المتابعة؟'))return;db=x;save();render();$('backupStatus').textContent='تم استيراد البيانات.'}catch(_){alert('الملف غير صالح أو لا يطابق تنسيق النسخة الاحتياطية.')}e.target.value=''};
 render();
-</body></html>render();
 </script></body></html>
