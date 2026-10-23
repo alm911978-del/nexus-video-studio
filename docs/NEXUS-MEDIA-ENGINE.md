@@ -5,7 +5,7 @@ This branch adds provider-neutral building blocks for identity continuity, image
 ## Modules
 - `src/nexus/character-lock.js`: structured character identity fields and a reusable continuity prompt.
 - `src/nexus/media-provider-contract.js`: explicit provider capabilities and selection; no provider is assumed enabled.
-- `src/nexus/media-pipeline.js`: input validation, bounded duration, progress events, adapter dispatch, and honest completion checks.
+- `src/nexus/media-pipeline.js`: input validation, bounded duration, progress events, adapter dispatch, HTTPS asset-URL syntax validation, and explicit separation between provider-reported completion and independent file verification.
 - `src/nexus/lipsync.js`: speech/lip-sync job preparation using an explicitly configured adapter.
 
 ## Required provider adapter
