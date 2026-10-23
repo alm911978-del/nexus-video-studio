@@ -321,7 +321,7 @@ $('plGeminiImprove').onclick=async()=>{
  const button=$('plGeminiImprove');button.disabled=true;button.textContent='جارٍ تحسين البرومبت…';
  setPLGeminiStatus('يرسل البرومبت إلى بوابة Gemini الآمنة…');
  try{
-  const res=await fetch(geminiSettings.endpoint+'/api/generate',{method:'POST',headers:{'content-type':'application/json','accept':'application/json'},body:JSON.stringify({action:'scene-prompt',prompt:'Refine the following cinematic prompt into a precise production-ready English prompt. Preserve the supplied facts and character identity. Do not invent completed media output. Return only the final prompt.\\n\\n'+current,turnstileToken})});
+  const res=await fetch(geminiSettings.endpoint+'/api/generate',{method:'POST',headers:{'content-type':'application/json','accept':'application/json'},body:JSON.stringify({action:'scene-prompt',prompt:'Refine the following cinematic prompt into a precise production-ready English prompt. Preserve the supplied facts and character identity. Do not invent completed media output. Return only the final prompt.\n\n'+current,turnstileToken})});
   const data=await res.json();
   if(!res.ok||!data.ok)throw Error(data.error||('HTTP '+res.status));
   $('plOutput').value=data.text;
