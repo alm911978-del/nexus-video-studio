@@ -11,7 +11,7 @@ function cleanText(value, max) {
 function isSafeAssetUrl(value) {
   if (typeof value !== "string") return false;
   const candidate = value.trim();
-  if (!candidate || /[\\u0000-\\u001F\\u007F]/.test(candidate)) return false;
+  if (!candidate || /[\u0000-\u001F\u007F]/.test(candidate)) return false;
   try {
     const url = new URL(candidate);
     return url.protocol === "https:" && Boolean(url.hostname) && !url.username && !url.password;
