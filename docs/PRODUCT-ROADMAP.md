@@ -3,23 +3,27 @@
 ## Product promise
 A transparent, provider-neutral workspace for planning cinematic scenes and orchestrating real media-generation services. The product must clearly distinguish planning tools from connected generation engines.
 
-## Stage 0 — Foundations (current review branch)
-- [x] Provider-neutral task orchestration primitives
-- [x] Structured character identity lock
-- [x] Media adapter contract and honest completion checks
-- [x] Reusable cinematic prompt templates
-- [x] Text-based continuity audit helper
-- [x] Unit-test workflow
-- [ ] Run unit tests and fix all failures
-- [ ] Review branch before merging
+## Stage 0 — Foundations (review branch)
+- [x] Provider-neutral task orchestration primitives.
+- [x] Structured character identity lock.
+- [x] Media adapter contract and honest completion checks.
+- [x] Reusable cinematic, image-to-video and dialogue prompt templates.
+- [x] Text-based continuity audit helper; explicitly not computer vision.
+- [x] GitHub Actions unit-test workflow.
+- [x] Run unit tests and fix reported failures (latest successful run linked from the review PR).
+- [ ] Complete human review before merging.
 
-## Stage 1 — Safe usable prototype
-- Connect character profiles and prompt templates to the existing UI.
-- Keep user data local by default and explain storage limitations.
-- Add import/export for project JSON.
-- Add accessible status messages, validation, and graceful error states.
-- Add a job history with provider, status, timestamps and output references.
-- Never put provider API keys in client-side HTML or JavaScript.
+## Stage 1 — Safer, more useful local prototype
+- [x] Connect saved character descriptions and saved projects to the prompt lab.
+- [x] Associate prompt-lab scenes with their selected project and character.
+- [x] Keep prompt-lab drafts in local browser storage.
+- [x] Add schema-versioned JSON backup export and validated import.
+- [x] Bound imported record counts and text lengths; replace unsafe/duplicate IDs; detach orphan scene references.
+- [x] Add UI smoke tests for JavaScript syntax, duplicate HTML IDs and missing static DOM targets.
+- [ ] Add a searchable scene library and edit-in-place flows.
+- [ ] Add local job history with timestamps, provider, status and verified output references.
+- [ ] Add accessibility and mobile browser regression checks.
+- [ ] Never put provider API keys in client-side HTML or JavaScript.
 
 ## Stage 2 — First real generation integration
 - Select one documented image-to-video provider with a verified accessible quota.
