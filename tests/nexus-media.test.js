@@ -43,6 +43,32 @@ test("media pipeline only reports completed after adapter returns an asset", asy
   assert.equal((await runMediaJob({mode:"image-to-video", providers:badProviders, input:{prompt:"scene"}})).status, "provider-did-not-return-verified-asset");
 });
 
+test("media pipeline rejects insecure, malformed and credential-bearing asset URLs", async () => {
+  const unsafeUrls = [
+    "javascript:alert(1)",
+    "data:video/mp4;base64,AAAA",
+    "http://example.test/video.mp4",
+    "/relative/video.mp4",
+    "https://user:secret@example.test/video.mp4",
+    "https://example.test/video.mp4\\nforged-header: value"
+  ];
+  for (const assetUrl of unsafeUrls) {
+    const providers = [{
+      id: "untrusted-url-provider",
+      enabled: true,
+      capabilities: ["image-to-video"],
+      adapter: async () => ({ status: "completed", assetUrl, mediaType: "video/mp4" })
+    }];
+    const result = await runMediaJob({
+      mode: "image-to-video",
+      providers,
+      input: { prompt: "cinematic scene" }
+    });
+    assert.equal(result.ok, false, "Should reject asset URL: " + assetUrl);
+    assert.equal(result.status, "provider-did-not-return-verified-asset");
+  }
+});
+
 test("lip-sync requires dialogue or audio and uses only configured capability", async () => {
   assert.equal((await runLipSyncJob({providers:[], input:{}})).status, "invalid-input");
   const providers = [{id:"mock-lipsync", enabled:true, capabilities:["audio-lip-sync"], adapter:async({input})=>({status:"completed",assetUrl:"https://example.test/lipsync.mp4",mediaType:"video/mp4",receivedPrompt:input.prompt})}];
