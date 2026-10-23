@@ -32,6 +32,14 @@ test("backup normalizer rejects non-objects and missing collections", () => {
   assert.equal(normalizeDatabase({ projects: [], characters: [] }).ok, false);
 });
 
+test("backup normalizer rejects a newer unsupported schema instead of silently dropping fields", () => {
+  const source = validBackup();
+  source.schemaVersion = 2;
+  const result = normalizeDatabase(source);
+  assert.equal(result.ok, false);
+  assert.match(result.error, /أحدث من إصدار NEXUS/);
+});
+
 test("unsafe record IDs are replaced with safe IDs", () => {
   const source = validBackup();
   source.projects[0].id = 'x" onclick="alert(1)';
