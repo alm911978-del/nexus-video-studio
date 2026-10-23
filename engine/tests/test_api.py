@@ -57,3 +57,26 @@ def test_audio_mux_rejects_negative_offset_when_ffmpeg_is_available(monkeypatch)
     )
     assert response.status_code == 400
     assert "between 0 and 3600" in response.json()["detail"]
+
+
+
+def test_audio_stream_probe_detects_silent_video(tmp_path, monkeypatch):
+    from app import _has_audio_stream
+
+    monkeypatch.setattr("app.shutil.which", lambda name: "/usr/bin/ffprobe")
+    monkeypatch.setattr(
+        "app.subprocess.run",
+        lambda *args, **kwargs: type("Result", (), {"returncode": 0, "stdout": "\\n", "stderr": ""})(),
+    )
+    assert _has_audio_stream(tmp_path / "silent.mp4") is False
+
+
+def test_audio_stream_probe_detects_existing_audio(tmp_path, monkeypatch):
+    from app import _has_audio_stream
+
+    monkeypatch.setattr("app.shutil.which", lambda name: "/usr/bin/ffprobe")
+    monkeypatch.setattr(
+        "app.subprocess.run",
+        lambda *args, **kwargs: type("Result", (), {"returncode": 0, "stdout": "1\\n", "stderr": ""})(),
+    )
+    assert _has_audio_stream(tmp_path / "with-audio.mp4") is True
