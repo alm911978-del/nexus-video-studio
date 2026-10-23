@@ -1,0 +1,28 @@
+name: NEXUS automated checks
+
+on:
+  push:
+    branches:
+      - main
+      - feature/nexus-orchestrator-foundation
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Run NEXUS unit tests
+        run: npm run test:nexus
+      - name: Run Worker gateway security tests
+        run: npm test --prefix worker
