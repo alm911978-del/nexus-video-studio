@@ -8,8 +8,16 @@ from pathlib import Path
 from typing import Literal
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
+from pydantic import BaseModel, Field
 from starlette.background import BackgroundTask
+
+from comfyui_provider import (
+    ProviderGenerationError,
+    ProviderNotConfigured,
+    generate_video as generate_with_comfyui,
+    is_configured as comfyui_is_configured,
+)
 
 APP_VERSION = "0.1.1"
 app = FastAPI(
@@ -56,18 +64,24 @@ def health() -> dict:
         "service": "nexus-video-engine",
         "version": APP_VERSION,
         "ffmpeg_available": _ffmpeg_path() is not None,
-        "video_generation": "not_configured",
+        "video_generation": "comfyui_configured" if comfyui_is_configured() else "not_configured",
     }
 
 
 @app.get("/api/v1/capabilities")
 def capabilities() -> dict:
     ffmpeg = _ffmpeg_path() is not None
+    provider_ready = comfyui_is_configured()
     return {
         "video_generation": {
-            "available": False,
-            "status": "not_configured",
-            "message": "No real video provider is connected. No generation is claimed.",
+            "available": provider_ready,
+            "status": "configured" if provider_ready else "not_configured",
+            "provider": "ComfyUI" if provider_ready else None,
+            "message": (
+                "ComfyUI workflow adapter is configured; generation still depends on the remote server, installed model, and workflow."
+                if provider_ready else
+                "No real video provider is connected. No generation is claimed."
+            ),
         },
         "audio_postproduction": {
             "available": ffmpeg,
@@ -78,15 +92,32 @@ def capabilities() -> dict:
     }
 
 
+class GenerateRequest(BaseModel):
+    prompt: str = Field(min_length=3, max_length=12000)
+
+
 @app.post("/api/v1/generate")
-def generate_not_configured() -> None:
-    """Fail clearly until a real video provider has been integrated."""
-    raise HTTPException(
-        status_code=503,
-        detail={
-            "code": "VIDEO_ENGINE_NOT_CONFIGURED",
-            "message": "NEXUS VIDEO has no connected video-generation provider yet. No video was generated.",
-        },
+def generate_video(request: GenerateRequest):
+    """Generate and return a real video through an explicitly configured ComfyUI server."""
+    if not comfyui_is_configured():
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "code": "VIDEO_ENGINE_NOT_CONFIGURED",
+                "message": "No video provider is configured. No video was generated.",
+            },
+        )
+    try:
+        video_bytes, suffix = generate_with_comfyui(request.prompt)
+    except ProviderNotConfigured as exc:
+        raise HTTPException(status_code=503, detail={"code": "VIDEO_PROVIDER_NOT_READY", "message": str(exc)})
+    except ProviderGenerationError as exc:
+        raise HTTPException(status_code=502, detail={"code": "VIDEO_GENERATION_FAILED", "message": str(exc)})
+    media_type = "video/webm" if suffix == ".webm" else "video/mp4"
+    return Response(
+        content=video_bytes,
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="nexus-generated{suffix}"'},
     )
 
 
