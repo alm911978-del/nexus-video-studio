@@ -77,7 +77,7 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid
 <script type="module">
 import { normalizeDatabase } from "./src/nexus/backup-schema.js";
 const KEY='nexus-video-50-data', LEGACY_KEY='nexus-video-57-data';
-const emptyDB=()=>({projects:[],characters:[],scenes:[]});
+const emptyDB=()=>({projects:[],characters:[],scenes:[],promptLabDraft:{}});
 let db=emptyDB();
 try{
   const current=localStorage.getItem(KEY);
@@ -123,9 +123,9 @@ $('draftScenePrompt').onclick=()=>{
   $('sPrompt').value=template;
   $('sPrompt').focus();
 };
-document.addEventListener('click',async e=>{let d=e.target.dataset;if(d.del){if(!confirm('هل تريد حذف هذا العنصر؟'))return;const collection=d.del==='project'?'projects':d.del==='character'?'characters':'scenes';db[collection]=db[collection].filter(x=>x.id!==d.id);if(d.del==='project')db.scenes.forEach(scene=>{if(scene.project===d.id)scene.project=''});if(d.del==='character')db.scenes.forEach(scene=>{if(scene.character===d.id)scene.character=''});save();render()}if(d.copy){let s=db.scenes.find(x=>x.id===d.copy);if(s){try{await navigator.clipboard.writeText(s.prompt);alert('تم نسخ وصف المشهد')}catch(_){prompt('انسخ وصف المشهد:',s.prompt)}}}});
+document.addEventListener('click',async e=>{let d=e.target.dataset;if(d.del){if(!confirm('هل تريد حذف هذا العنصر؟'))return;const collection=d.del==='project'?'projects':d.del==='character'?'characters':'scenes';db[collection]=db[collection].filter(x=>x.id!==d.id);if(d.del==='project')db.scenes.forEach(scene=>{if(scene.project===d.id)scene.project=''});if(d.del==='character')db.scenes.forEach(scene=>{if(scene.character===d.id)scene.character=''});if(db.promptLabDraft&&d.del==='project'&&db.promptLabDraft.plSavedProject===d.id)db.promptLabDraft.plSavedProject='';if(db.promptLabDraft&&d.del==='character'&&db.promptLabDraft.plSavedCharacter===d.id)db.promptLabDraft.plSavedCharacter='';save();render()}if(d.copy){let s=db.scenes.find(x=>x.id===d.copy);if(s){try{await navigator.clipboard.writeText(s.prompt);alert('تم نسخ وصف المشهد')}catch(_){prompt('انسخ وصف المشهد:',s.prompt)}}}});
 $('exportData').onclick=()=>{let backup={schemaVersion:1,exportedAt:new Date().toISOString(),...db};let blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nexus-video-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);$('backupStatus').textContent='تم تجهيز ملف النسخة الاحتياطية (Schema v1).'};
-$('importButton').onclick=()=> $('importFile').click();$('importFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{if(f.size>5*1024*1024)throw Error('حجم النسخة الاحتياطية يتجاوز الحد المسموح (5 MB).');let x=JSON.parse(await f.text());const normalized=normalizeDatabase(x);if(!normalized.ok)throw Error(normalized.error);const warningText=normalized.warnings.length?'\nملاحظات التنظيف: '+normalized.warnings.join(' '):'';if(!confirm('سيستبدل الاستيراد البيانات الحالية بعد التحقق والتنظيف. هل تريد المتابعة؟'+warningText))return;db=normalized.data;save();render();$('backupStatus').textContent='تم استيراد البيانات والتحقق من بنيتها.'+(normalized.warnings.length?' عدد الملاحظات: '+normalized.warnings.length+'.':' لا توجد ملاحظات.')}catch(err){alert(err?.message||'الملف غير صالح أو لا يطابق تنسيق النسخة الاحتياطية.')}finally{e.target.value=''}};
+$('importButton').onclick=()=> $('importFile').click();$('importFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{if(f.size>5*1024*1024)throw Error('حجم النسخة الاحتياطية يتجاوز الحد المسموح (5 MB).');let x=JSON.parse(await f.text());const normalized=normalizeDatabase(x);if(!normalized.ok)throw Error(normalized.error);const warningText=normalized.warnings.length?'\nملاحظات التنظيف: '+normalized.warnings.join(' '):'';if(!confirm('سيستبدل الاستيراد البيانات الحالية بعد التحقق والتنظيف. هل تريد المتابعة؟'+warningText))return;db=normalized.data;try{localStorage.removeItem(PL_DRAFT_KEY)}catch(_){}save();render();restorePromptLabDraft();$('backupStatus').textContent='تم استيراد البيانات والتحقق من بنيتها.'+(normalized.warnings.length?' عدد الملاحظات: '+normalized.warnings.length+'.':' لا توجد ملاحظات.')}catch(err){alert(err?.message||'الملف غير صالح أو لا يطابق تنسيق النسخة الاحتياطية.')}finally{e.target.value=''}};
 function buildWriterPrompt(){
 const idea=$('wIdea').value.trim();if(!idea){alert('اكتب فكرة المسلسل أولًا');return ''}
 const genre=$('wGenre').value, episodes=$('wEpisodes').value, duration=$('wDuration').value, tone=$('wTone').value, setting=$('wSetting').value.trim()||'اقترح مكانًا مناسبًا للقصة', notes=$('wNotes').value.trim()||'لا توجد قيود إضافية';
@@ -258,13 +258,33 @@ function savePromptLabDraft(){
  try{
   const draft={};
   for(const fieldId of PL_DRAFT_FIELDS){const field=$(fieldId);if(field)draft[fieldId]=String(field.value||'').slice(0,12000);}
-  localStorage.setItem(PL_DRAFT_KEY,JSON.stringify(draft));
+  if(!db.projects.some(project=>project.id===draft.plSavedProject))draft.plSavedProject='';
+  if(!db.characters.some(character=>character.id===draft.plSavedCharacter))draft.plSavedCharacter='';
+  if(!['cinematic','image','dialogue'].includes(draft.plTemplate))draft.plTemplate='cinematic';
+  db.promptLabDraft=draft;
+  save();
+  try{localStorage.removeItem(PL_DRAFT_KEY)}catch(_){}
  }catch(_){setGeminiStatus('تعذر حفظ مسودة المختبر محليًا؛ صدّر نسخة احتياطية من بيانات المشروع عند الحاجة.',true)}
 }
+function restorePromptLabDraft(){
+ let draft=db.promptLabDraft&&typeof db.promptLabDraft==='object'?db.promptLabDraft:{};
+ if(!Object.keys(draft).length){
+  try{
+   const legacy=JSON.parse(localStorage.getItem(PL_DRAFT_KEY)||'{}');
+   if(legacy&&typeof legacy==='object'&&!Array.isArray(legacy)&&Object.keys(legacy).length){
+    const migrated=normalizeDatabase({...db,promptLabDraft:legacy});
+    if(migrated.ok){db.promptLabDraft=migrated.data.promptLabDraft;save();draft=db.promptLabDraft;try{localStorage.removeItem(PL_DRAFT_KEY)}catch(_){}}
+   }
+  }catch(_){}
+ }
+ for(const fieldId of PL_DRAFT_FIELDS){
+  const field=$(fieldId),value=draft[fieldId];
+  if(!field||typeof value!=='string')continue;
+  if(field.tagName==='SELECT'&&![...field.options].some(option=>option.value===value))continue;
+  field.value=value.slice(0,12000);
+ }
+}
 render();
-try{
- const draft=JSON.parse(localStorage.getItem(PL_DRAFT_KEY)||'{}');
- for(const fieldId of PL_DRAFT_FIELDS){const field=$(fieldId);if(field&&typeof draft[fieldId]==='string'&&(field.tagName!=='SELECT'||[...field.options].some(option=>option.value===draft[fieldId])))field.value=draft[fieldId].slice(0,12000);}
-}catch(_){}
+restorePromptLabDraft();
 for(const fieldId of PL_DRAFT_FIELDS){const field=$(fieldId);if(field){field.addEventListener('input',savePromptLabDraft);field.addEventListener('change',savePromptLabDraft)}}
 </script></body></html>
