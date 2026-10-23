@@ -185,8 +185,16 @@ export function normalizeDatabase(input, { idFactory = defaultIdFactory } = {}) 
       warnings.push("تم تجاهل سجل نشاط غير صالح.");
     } else {
       const validActivity = input.activity.filter(record => {
-        const valid = Boolean(record && typeof record === "object" && !Array.isArray(record));
-        if (!valid) warnings.push("تم تجاهل عملية نشاط غير صالحة.");
+        const isRecord = Boolean(record && typeof record === "object" && !Array.isArray(record));
+        if (!isRecord) {
+          warnings.push("تم تجاهل عملية نشاط غير صالحة.");
+          return false;
+        }
+        const type = cleanText(record.type, 80);
+        const title = cleanText(record.title, 200);
+        const timestamp = typeof record.at === "string" ? Date.parse(record.at) : NaN;
+        const valid = ACTIVITY_TYPES.has(type) && Boolean(title) && Number.isFinite(timestamp);
+        if (!valid) warnings.push("تم تجاهل عملية نشاط ينقصها النوع أو العنوان أو الوقت الصحيح.");
         return valid;
       });
       if (validActivity.length > LIMITS.activity) warnings.push("تم الاحتفاظ بآخر " + LIMITS.activity + " عملية فقط.");
