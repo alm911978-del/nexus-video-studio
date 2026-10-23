@@ -61,13 +61,13 @@ test("fails closed if required secrets or rate-limit binding are missing", async
 test("published HTML inline JavaScript parses and includes secure Gemini controls", () => {
   const htmlPath = fileURLToPath(new URL("../../index.html", import.meta.url));
   const html = readFileSync(htmlPath, "utf8");
-  const inlineScripts = [...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)]
+  const inlineScripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
     .map(match => match[1])
     .filter(source => source.trim());
   assert.ok(inlineScripts.length > 0, "expected an inline application script");
   for (const source of inlineScripts) new Script(source);
   assert.match(html, /id="generateGemini"/);
   assert.match(html, /id="turnstileWidget"/);
-  assert.match(html, /api\\/generate/);
-  assert.doesNotMatch(html, /\\bAIza[0-9A-Za-z_-]{35}\\b/, "do not embed a Google API key in public HTML");
+  assert.match(html, /api\/generate/);
+  assert.doesNotMatch(html, /\bAIza[0-9A-Za-z_-]{35}\b/, "do not embed a Google API key in public HTML");
 });
