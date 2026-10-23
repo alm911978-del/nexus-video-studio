@@ -56,3 +56,12 @@ test("local activity page exposes export and clear actions and logs only explici
   assert.match(moduleSource, /recordActivity\('ai-text-generated'/);
   assert.match(html, /توليد الفيديو.*غير موصولة/);
 });
+
+test("prompt lab can refine its text through the secured Gemini gateway without claiming video generation", () => {
+  assert.match(html, /id="plGeminiImprove"/);
+  assert.match(html, /id="plGeminiStatus"/);
+  assert.match(moduleSource, /action:'scene-prompt'/);
+  assert.match(moduleSource, /current\.length>12000/);
+  assert.match(moduleSource, /setPLGeminiStatus/);
+  assert.match(moduleSource, /ليست فيديو مولّدًا/);
+});
