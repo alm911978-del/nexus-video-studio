@@ -30,6 +30,6 @@ test("backup import is normalized and restores the included prompt lab draft", (
   assert.match(moduleSource, /db\s*=\s*normalized\.data/);
   assert.match(moduleSource, /schemaVersion:1/);
   assert.match(moduleSource, /db\.promptLabDraft=draft/);
-  assert.match(moduleSource, /render\(\);restorePromptLabDraft\(\)/);
-  assert.match(moduleSource, /id="plSavedProject"/);
+  assert.match(moduleSource, /render\\(\\);\\s*restorePromptLabDraft\\(\\)/);
+  assert.match(html, /id="plSavedProject"/);
 });
