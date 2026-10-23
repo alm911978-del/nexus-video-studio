@@ -1,0 +1,9 @@
+{
+  "name": "nexus-gemini-gateway",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
+  "devDependencies": {}
+}
