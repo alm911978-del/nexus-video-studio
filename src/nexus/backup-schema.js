@@ -70,6 +70,13 @@ export function normalizeDatabase(input, { idFactory = defaultIdFactory } = {}) 
     return { ok: false, error: "النسخة الاحتياطية لا تحتوي على أقسام المشاريع والشخصيات والمشاهد المطلوبة." };
   }
 
+  if (input.schemaVersion !== undefined && (!Number.isInteger(input.schemaVersion) || input.schemaVersion < 1)) {
+    return { ok: false, error: "رقم إصدار النسخة الاحتياطية غير صالح." };
+  }
+  if (Number.isInteger(input.schemaVersion) && input.schemaVersion > 1) {
+    return { ok: false, error: "هذه النسخة الاحتياطية أحدث من إصدار NEXUS الحالي؛ حدّث الموقع قبل استيرادها." };
+  }
+
   const warnings = [];
   const usedIds = new Set();
   const projectIdMap = new Map();
