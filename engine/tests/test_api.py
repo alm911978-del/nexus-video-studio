@@ -66,7 +66,7 @@ def test_audio_stream_probe_detects_silent_video(tmp_path, monkeypatch):
     monkeypatch.setattr("app.shutil.which", lambda name: "/usr/bin/ffprobe")
     monkeypatch.setattr(
         "app.subprocess.run",
-        lambda *args, **kwargs: type("Result", (), {"returncode": 0, "stdout": "\\n", "stderr": ""})(),
+        lambda *args, **kwargs: type("Result", (), {"returncode": 0, "stdout": "", "stderr": ""})(),
     )
     assert _has_audio_stream(tmp_path / "silent.mp4") is False
 
@@ -77,6 +77,6 @@ def test_audio_stream_probe_detects_existing_audio(tmp_path, monkeypatch):
     monkeypatch.setattr("app.shutil.which", lambda name: "/usr/bin/ffprobe")
     monkeypatch.setattr(
         "app.subprocess.run",
-        lambda *args, **kwargs: type("Result", (), {"returncode": 0, "stdout": "1\\n", "stderr": ""})(),
+        lambda *args, **kwargs: type("Result", (), {"returncode": 0, "stdout": "1\n", "stderr": ""})(),
     )
     assert _has_audio_stream(tmp_path / "with-audio.mp4") is True
