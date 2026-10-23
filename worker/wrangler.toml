@@ -1,0 +1,12 @@
+name = "nexus-gemini-gateway"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[vars]
+ALLOWED_ORIGINS = "https://alm911978-del.github.io"
+TURNSTILE_HOSTNAME = "alm911978-del.github.io"
+
+[[kv_namespaces]]
+binding = "RATE_LIMITS"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
