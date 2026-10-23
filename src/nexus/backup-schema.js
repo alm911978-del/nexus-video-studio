@@ -184,12 +184,13 @@ export function normalizeDatabase(input, { idFactory = defaultIdFactory } = {}) 
     if (!Array.isArray(input.activity)) {
       warnings.push("تم تجاهل سجل نشاط غير صالح.");
     } else {
-      if (input.activity.length > LIMITS.activity) warnings.push("تم الاحتفاظ بآخر " + LIMITS.activity + " عملية فقط.");
-      rawActivity = input.activity.slice(-LIMITS.activity).filter(record => {
+      const validActivity = input.activity.filter(record => {
         const valid = Boolean(record && typeof record === "object" && !Array.isArray(record));
         if (!valid) warnings.push("تم تجاهل عملية نشاط غير صالحة.");
         return valid;
       });
+      if (validActivity.length > LIMITS.activity) warnings.push("تم الاحتفاظ بآخر " + LIMITS.activity + " عملية فقط.");
+      rawActivity = validActivity.slice(-LIMITS.activity);
     }
   }
 
