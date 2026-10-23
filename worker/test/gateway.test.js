@@ -71,3 +71,46 @@ test("published HTML inline JavaScript parses and includes secure Gemini control
   assert.match(html, /api\/generate/);
   assert.doesNotMatch(html, /\bAIza[0-9A-Za-z_-]{35}\b/, "do not embed a Google API key in public HTML");
 });
+
+test("answers CORS preflight only for the configured origin", async () => {
+  const good = await worker.fetch(req("/api/generate", { method: "OPTIONS" }), env);
+  assert.equal(good.status, 204);
+  const bad = await worker.fetch(new Request("https://worker.example/api/generate", {
+    method: "OPTIONS",
+    headers: { Origin: "https://evil.example" }
+  }), env);
+  assert.equal(bad.status, 403);
+});
+
+test("rejects oversized generation payloads", async () => {
+  const body = JSON.stringify({ action: "series", prompt: "x".repeat(21_000), turnstileToken: "test" });
+  const res = await worker.fetch(req("/api/generate", {
+    method: "POST",
+    body,
+    headers: { "content-type": "application/json" }
+  }), env);
+  assert.equal(res.status, 413);
+});
+
+test("enforces daily IP rate limit after successful Turnstile verification", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({ success: true, hostname: "alm911978-del.github.io" }), {
+    status: 200,
+    headers: { "content-type": "application/json" }
+  });
+  try {
+    const limitedEnv = {
+      ...env,
+      RATE_LIMITS: { get: async () => "30", put: async () => { throw new Error("should not write over limit"); } }
+    };
+    const res = await worker.fetch(req("/api/generate", {
+      method: "POST",
+      body: JSON.stringify({ action: "series", prompt: "test", turnstileToken: "valid-token" }),
+      headers: { "content-type": "application/json" }
+    }), limitedEnv);
+    assert.equal(res.status, 429);
+    assert.match((await res.json()).error, /Daily request limit/);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
