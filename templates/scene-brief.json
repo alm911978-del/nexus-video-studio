@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene-001",
+  "title": "عنوان المشهد",
+  "durationSeconds": 5,
+  "aspectRatio": "9:16",
+  "characterIds": [],
+  "location": "الموقع",
+  "timeOfDay": "night",
+  "action": "ما الذي يحدث بصريًا؟",
+  "camera": {
+    "shotSize": "medium close-up",
+    "movement": "slow push-in",
+    "lensLook": "cinematic natural"
+  },
+  "lighting": "وصف الإضاءة",
+  "dialogue": {
+    "language": "ar",
+    "text": "",
+    "audioAsset": null,
+    "lipSyncRequired": false
+  },
+  "soundDesign": [],
+  "continuityMustKeep": [],
+  "negativeConstraints": [
+    "no identity drift",
+    "no abrupt cuts",
+    "no warped anatomy",
+    "no unrequested text"
+  ],
+  "generation": {
+    "providerId": null,
+    "jobId": null,
+    "status": "draft",
+    "outputAsset": null
+  }
+}
