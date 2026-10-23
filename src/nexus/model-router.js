@@ -15,9 +15,11 @@ export function selectProvider(task, providers = []) {
     typeof provider.run === "function"
   );
 
-  candidates.sort((a, b) =>
-    (Number(a.priority) || 100) - (Number(b.priority) || 100)
-  );
+  const priorityOf = provider =>
+    typeof provider.priority === "number" && Number.isFinite(provider.priority)
+      ? provider.priority
+      : 100;
+  candidates.sort((a, b) => priorityOf(a) - priorityOf(b));
 
   if (!candidates.length) {
     return { ok: false, code: "NO_CAPABLE_PROVIDER", provider: null };
