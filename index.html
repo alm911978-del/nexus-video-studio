@@ -11,7 +11,7 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid
 <body><main class="app">
 <header class="top"><div class="brand"><div class="logo">NΩ</div><div><h1>NEXUS VIDEO 5.0</h1><div class="muted">استوديو صناعة الأفلام بالذكاء الاصطناعي</div></div></div><span class="pill">Prototype 0.3 · محلي</span></header>
 <div class="notice"><strong>تنبيه الشفافية:</strong> إدارة المشاريع وكتابة ملفات التطوير تعمل محليًا. توليد الفيديو والصوت ومزامنة الشفاه غير موصولة. لا تستخدم مفاتيح API داخل الواجهة. تُحفظ البيانات في هذا المتصفح فقط.</div>
-<div class="layout"><nav class="panel nav" aria-label="التنقل"><button class="active" data-page="projects">المشاريع</button><button data-page="writer">كاتب المسلسلات</button><button data-page="characters">الشخصيات</button><button data-page="scenes">المشاهد</button><button data-page="promptLab">مختبر البرومبتات</button><button data-page="backup">النسخ الاحتياطي</button><button data-page="engine">حالة المحركات</button></nav>
+<div class="layout"><nav class="panel nav" aria-label="التنقل"><button class="active" data-page="projects">المشاريع</button><button data-page="writer">كاتب المسلسلات</button><button data-page="characters">الشخصيات</button><button data-page="scenes">المشاهد</button><button data-page="promptLab">مختبر البرومبتات</button><button data-page="backup">النسخ الاحتياطي</button><button data-page="activity">سجل النشاط</button><button data-page="engine">حالة المحركات</button></nav>
 <div>
 <section id="projects" class="page active"><div class="row"><h2>مشاريعي</h2><button class="primary" id="newProject">＋ مشروع جديد</button></div><div id="projectList" class="grid"></div><div id="projectForm" class="card" hidden><h3>إنشاء مشروع</h3><label>اسم المشروع</label><input id="pName" placeholder="مثال: فارس الصحراء الأخير"><label>ملخص القصة</label><textarea id="pSummary" placeholder="اكتب فكرة الفيلم..."></textarea><div class="row"><div><label>الأسلوب</label><select id="pStyle"><option>سينمائي شبه واقعي</option><option>أنمي</option><option>وثائقي</option><option>خيال علمي</option></select></div><div><label>نسبة العرض</label><select id="pRatio"><option>9:16 عمودي</option><option>16:9 أفقي</option><option>1:1 مربع</option></select></div></div><div class="row" style="margin-top:10px"><button class="primary" id="saveProject">حفظ المشروع</button><button id="cancelProject">إلغاء</button></div></div></section>
 <section id="writer" class="page">
@@ -71,13 +71,19 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid
 <div class="notice">ملاحظة: قفل الهوية هنا تعليمات نصية. لا يضمن تطابق الوجه من دون محرك يدعم الصور المرجعية، ولا يحرّك الفم من دون خدمة مزامنة فعلية.</div>
 </section>
 <section id="backup" class="page"><h2>النسخ الاحتياطي</h2><p class="muted">صدّر بياناتك قبل تغيير المتصفح أو الجهاز. لا تُرسل بياناتك إلى خادم.</p><div class="row"><button class="primary" id="exportData">تصدير JSON</button><button id="importButton">استيراد JSON</button><input id="importFile" type="file" accept=".json,application/json" hidden></div><pre id="backupStatus" class="muted"></pre></section>
+<section id="activity" class="page">
+<div class="row"><h2>سجل النشاط المحلي</h2><div class="row"><button class="primary" id="exportActivity">تصدير السجل</button><button class="danger" id="clearActivity">مسح السجل</button></div></div>
+<p class="muted">يعرض هذا السجل التغييرات التي نُفذت داخل الاستوديو على هذا المتصفح. لا يعني إنشاء برومبت أن فيديو قد تم توليده، ولا يُسجل التوليد إلا إذا أعادت البوابة نتيجة ناجحة.</p>
+<p id="activityCount" class="muted" role="status" aria-live="polite"></p>
+<div id="activityList" class="stack"></div>
+</section>
 <section id="engine" class="page"><h2>حالة المحركات</h2><div class="item"><h3>إدارة المشاريع والمشاهد</h3><span class="pill">متاح محليًا</span><p class="muted">الحفظ عبر localStorage في المتصفح الحالي.</p></div><div class="item"><h3>توليد الفيديو</h3><span class="pill">غير متصل</span><p class="muted">لا توجد واجهة API متصلة. يلزم اختيار مزود وتكوين الربط بشكل آمن.</p></div><div class="item"><h3>الصوت ومزامنة الشفاه</h3><span class="pill">غير متصل</span><p class="muted">غير متاحين في هذه النسخة.</p></div></section>
 </div></div><div class="footer">NEXUS Ω · NEXUS VIDEO 5.0 · نسخة تجريبية محلية. لا تضع مفاتيح API أو كلمات المرور داخل ملفات الواجهة.</div></main>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 <script type="module">
 import { normalizeDatabase } from "./src/nexus/backup-schema.js";
 const KEY='nexus-video-50-data', LEGACY_KEY='nexus-video-57-data';
-const emptyDB=()=>({projects:[],characters:[],scenes:[],promptLabDraft:{}});
+const emptyDB=()=>({projects:[],characters:[],scenes:[],promptLabDraft:{},activity:[]});
 let db=emptyDB();
 try{
   const current=localStorage.getItem(KEY);
@@ -97,6 +103,27 @@ function resetSceneEditor(){
  editingSceneId=null;
  $('sName').value='';$('sPrompt').value='';$('sProject').value='';$('sCharacter').value='';
  $('saveScene').textContent='حفظ المشهد';$('cancelScene').textContent='إلغاء';
+}
+function recordActivity(type,title,detail=''){
+ if(!Array.isArray(db.activity))db.activity=[];
+ db.activity.push({id:id(),type,title:String(title||'').trim().slice(0,200),detail:String(detail||'').slice(0,800),at:new Date().toISOString()});
+ if(db.activity.length>200)db.activity=db.activity.slice(-200);
+}
+function renderActivity(){
+ const events=Array.isArray(db.activity)?db.activity.slice().reverse():[];
+ const labels={
+  'project-created':'إنشاء مشروع','project-deleted':'حذف مشروع',
+  'character-created':'إنشاء شخصية','character-deleted':'حذف شخصية',
+  'scene-created':'إنشاء مشهد','scene-edited':'تعديل مشهد','scene-deleted':'حذف مشهد',
+  'prompt-generated':'إنشاء برومبت','prompt-copied':'نسخ برومبت',
+  'backup-exported':'تصدير نسخة احتياطية','backup-imported':'استيراد نسخة احتياطية',
+  'activity-exported':'تصدير سجل النشاط','ai-text-generated':'توليد نص عبر البوابة'
+ };
+ $('activityCount').textContent='عدد العمليات المحفوظة: '+events.length+' من 200';
+ $('activityList').innerHTML=events.length?events.map(event=>{
+  const when=new Date(event.at),dateLabel=Number.isNaN(when.getTime())?'وقت غير معروف':when.toLocaleString('ar-SA');
+  return '<article class="item"><div class="row"><h3>'+esc(event.title)+'</h3><span class="pill">'+esc(labels[event.type]||'نشاط محلي')+'</span></div><p>'+esc(event.detail||'—')+'</p><small class="muted">'+esc(dateLabel)+'</small></article>';
+ }).join(''):empty('لا توجد عمليات مسجلة بعد. ابدأ بإنشاء مشروع أو شخصية أو مشهد.');
 }
 function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function empty(msg){return '<div class="empty">'+msg+'</div>'}
@@ -120,23 +147,26 @@ $('plSavedProject').innerHTML='<option value="">بدون مشروع</option>'+db
 $('plSavedCharacter').innerHTML='<option value="">بدون شخصية</option>'+db.characters.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('');
 if(db.projects.some(p=>p.id===selectedPLProject))$('plSavedProject').value=selectedPLProject;
 if(db.characters.some(c=>c.id===selectedPLCharacter))$('plSavedCharacter').value=selectedPLCharacter;
+renderActivity();
 }
 document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===b.dataset.page));render()});
 $('newProject').onclick=()=> $('projectForm').hidden=false;$('cancelProject').onclick=()=> $('projectForm').hidden=true;
-$('saveProject').onclick=()=>{let name=$('pName').value.trim();if(!name)return alert('اكتب اسم المشروع أولًا');db.projects.push({id:id(),name,summary:$('pSummary').value.trim(),style:$('pStyle').value,ratio:$('pRatio').value});save();$('pName').value='';$('pSummary').value='';$('projectForm').hidden=true;render()};
+$('saveProject').onclick=()=>{let name=$('pName').value.trim();if(!name)return alert('اكتب اسم المشروع أولًا');db.projects.push({id:id(),name,summary:$('pSummary').value.trim(),style:$('pStyle').value,ratio:$('pRatio').value});recordActivity('project-created','إنشاء مشروع',name);save();$('pName').value='';$('pSummary').value='';$('projectForm').hidden=true;render()};
 $('newCharacter').onclick=()=> $('characterForm').hidden=false;$('cancelCharacter').onclick=()=> $('characterForm').hidden=true;
-$('saveCharacter').onclick=()=>{let name=$('cName').value.trim();if(!name)return alert('اكتب اسم الشخصية أولًا');db.characters.push({id:id(),name,desc:$('cDesc').value.trim()});save();$('cName').value='';$('cDesc').value='';$('characterForm').hidden=true;render()};
+$('saveCharacter').onclick=()=>{let name=$('cName').value.trim();if(!name)return alert('اكتب اسم الشخصية أولًا');db.characters.push({id:id(),name,desc:$('cDesc').value.trim()});recordActivity('character-created','إنشاء شخصية',name);save();$('cName').value='';$('cDesc').value='';$('characterForm').hidden=true;render()};
 $('newScene').onclick=()=>{resetSceneEditor();render();$('sceneForm').hidden=false};
 $('cancelScene').onclick=()=>{resetSceneEditor();$('sceneForm').hidden=true};
 $('saveScene').onclick=()=>{
  const name=$('sName').value.trim(),prompt=$('sPrompt').value.trim();
  if(!name||!prompt)return alert('أدخل اسم المشهد ووصفه');
  const values={name,prompt,project:$('sProject').value,character:$('sCharacter').value};
+ const wasEditing=Boolean(editingSceneId);
  if(editingSceneId){
   const existing=db.scenes.find(scene=>scene.id===editingSceneId);
   if(!existing){resetSceneEditor();$('sceneForm').hidden=true;return alert('لم يعد هذا المشهد موجودًا؛ أعد فتحه من المكتبة.')}
   Object.assign(existing,values);
  }else db.scenes.push({id:id(),...values});
+ recordActivity(wasEditing?'scene-edited':'scene-created',wasEditing?'تعديل مشهد':'إنشاء مشهد',name);
  save();resetSceneEditor();$('sceneForm').hidden=true;render();
 };
 $('sceneSearch').addEventListener('input',render);
@@ -150,9 +180,9 @@ $('draftScenePrompt').onclick=()=>{
   $('sPrompt').value=template;
   $('sPrompt').focus();
 };
-document.addEventListener('click',async e=>{let d=e.target.dataset;if(d.editScene){const scene=db.scenes.find(item=>item.id===d.editScene);if(!scene)return;editingSceneId=scene.id;$('sName').value=scene.name;$('sPrompt').value=scene.prompt;$('sProject').value=scene.project||'';$('sCharacter').value=scene.character||'';$('saveScene').textContent='حفظ التعديلات';$('cancelScene').textContent='إلغاء التعديل';$('sceneForm').hidden=false;document.querySelectorAll('[data-page]').forEach(b=>{const active=b.dataset.page==='scenes';b.classList.toggle('active',active);document.getElementById(b.dataset.page).classList.toggle('active',active)});return}if(d.del){if(!confirm('هل تريد حذف هذا العنصر؟'))return;const collection=d.del==='project'?'projects':d.del==='character'?'characters':'scenes';db[collection]=db[collection].filter(x=>x.id!==d.id);if(d.del==='project')db.scenes.forEach(scene=>{if(scene.project===d.id)scene.project=''});if(d.del==='character')db.scenes.forEach(scene=>{if(scene.character===d.id)scene.character=''});if(db.promptLabDraft&&d.del==='project'&&db.promptLabDraft.plSavedProject===d.id)db.promptLabDraft.plSavedProject='';if(db.promptLabDraft&&d.del==='character'&&db.promptLabDraft.plSavedCharacter===d.id)db.promptLabDraft.plSavedCharacter='';save();render()}if(d.copy){let s=db.scenes.find(x=>x.id===d.copy);if(s){try{await navigator.clipboard.writeText(s.prompt);alert('تم نسخ وصف المشهد')}catch(_){prompt('انسخ وصف المشهد:',s.prompt)}}}});
-$('exportData').onclick=()=>{let backup={schemaVersion:1,exportedAt:new Date().toISOString(),...db};let blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nexus-video-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);$('backupStatus').textContent='تم تجهيز ملف النسخة الاحتياطية (Schema v1).'};
-$('importButton').onclick=()=> $('importFile').click();$('importFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{if(f.size>5*1024*1024)throw Error('حجم النسخة الاحتياطية يتجاوز الحد المسموح (5 MB).');let x=JSON.parse(await f.text());const normalized=normalizeDatabase(x);if(!normalized.ok)throw Error(normalized.error);const warningText=normalized.warnings.length?'\nملاحظات التنظيف: '+normalized.warnings.join(' '):'';if(!confirm('سيستبدل الاستيراد البيانات الحالية بعد التحقق والتنظيف. هل تريد المتابعة؟'+warningText))return;db=normalized.data;try{localStorage.removeItem(PL_DRAFT_KEY)}catch(_){}save();render();restorePromptLabDraft();$('backupStatus').textContent='تم استيراد البيانات والتحقق من بنيتها.'+(normalized.warnings.length?' عدد الملاحظات: '+normalized.warnings.length+'.':' لا توجد ملاحظات.')}catch(err){alert(err?.message||'الملف غير صالح أو لا يطابق تنسيق النسخة الاحتياطية.')}finally{e.target.value=''}};
+document.addEventListener('click',async e=>{let d=e.target.dataset;if(d.editScene){const scene=db.scenes.find(item=>item.id===d.editScene);if(!scene)return;editingSceneId=scene.id;$('sName').value=scene.name;$('sPrompt').value=scene.prompt;$('sProject').value=scene.project||'';$('sCharacter').value=scene.character||'';$('saveScene').textContent='حفظ التعديلات';$('cancelScene').textContent='إلغاء التعديل';$('sceneForm').hidden=false;document.querySelectorAll('[data-page]').forEach(b=>{const active=b.dataset.page==='scenes';b.classList.toggle('active',active);document.getElementById(b.dataset.page).classList.toggle('active',active)});return}if(d.del){if(!confirm('هل تريد حذف هذا العنصر؟'))return;const collection=d.del==='project'?'projects':d.del==='character'?'characters':'scenes';const removed=db[collection].find(x=>x.id===d.id);db[collection]=db[collection].filter(x=>x.id!==d.id);if(d.del==='project')db.scenes.forEach(scene=>{if(scene.project===d.id)scene.project=''});if(d.del==='character')db.scenes.forEach(scene=>{if(scene.character===d.id)scene.character=''});if(db.promptLabDraft&&d.del==='project'&&db.promptLabDraft.plSavedProject===d.id)db.promptLabDraft.plSavedProject='';if(db.promptLabDraft&&d.del==='character'&&db.promptLabDraft.plSavedCharacter===d.id)db.promptLabDraft.plSavedCharacter='';const activityType=d.del==='project'?'project-deleted':d.del==='character'?'character-deleted':'scene-deleted';recordActivity(activityType,d.del==='project'?'حذف مشروع':d.del==='character'?'حذف شخصية':'حذف مشهد',removed?.name||d.id);save();render()}if(d.copy){let s=db.scenes.find(x=>x.id===d.copy);if(s){try{await navigator.clipboard.writeText(s.prompt);alert('تم نسخ وصف المشهد')}catch(_){prompt('انسخ وصف المشهد:',s.prompt)}}}});
+$('exportData').onclick=()=>{recordActivity('backup-exported','تصدير نسخة احتياطية','تم طلب تصدير نسخة JSON من بيانات الاستوديو.');save();renderActivity();let backup={schemaVersion:1,exportedAt:new Date().toISOString(),...db};let blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nexus-video-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);$('backupStatus').textContent='تم تجهيز ملف النسخة الاحتياطية (Schema v1).'};
+$('importButton').onclick=()=> $('importFile').click();$('importFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{if(f.size>5*1024*1024)throw Error('حجم النسخة الاحتياطية يتجاوز الحد المسموح (5 MB).');let x=JSON.parse(await f.text());const normalized=normalizeDatabase(x);if(!normalized.ok)throw Error(normalized.error);const warningText=normalized.warnings.length?'\nملاحظات التنظيف: '+normalized.warnings.join(' '):'';if(!confirm('سيستبدل الاستيراد البيانات الحالية بعد التحقق والتنظيف. هل تريد المتابعة؟'+warningText))return;db=normalized.data;try{localStorage.removeItem(PL_DRAFT_KEY)}catch(_){}recordActivity('backup-imported','استيراد نسخة احتياطية','تم التحقق من الملف وتنظيف البيانات قبل استبدال النسخة المحلية.');save();render();restorePromptLabDraft();$('backupStatus').textContent='تم استيراد البيانات والتحقق من بنيتها.'+(normalized.warnings.length?' عدد الملاحظات: '+normalized.warnings.length+'.':' لا توجد ملاحظات.')}catch(err){alert(err?.message||'الملف غير صالح أو لا يطابق تنسيق النسخة الاحتياطية.')}finally{e.target.value=''}};
 function buildWriterPrompt(){
 const idea=$('wIdea').value.trim();if(!idea){alert('اكتب فكرة المسلسل أولًا');return ''}
 const genre=$('wGenre').value, episodes=$('wEpisodes').value, duration=$('wDuration').value, tone=$('wTone').value, setting=$('wSetting').value.trim()||'اقترح مكانًا مناسبًا للقصة', notes=$('wNotes').value.trim()||'لا توجد قيود إضافية';
@@ -234,6 +264,8 @@ $('checkGeminiGateway').onclick=async()=>{
  try{const res=await fetch(geminiSettings.endpoint+'/api/health',{headers:{'accept':'application/json'}});const data=await res.json();if(!res.ok||!data.ok)throw Error(data.error||'تعذر الاتصال');setGeminiStatus('الاتصال ناجح: '+data.service+' · النموذج '+data.model+' · فحص الأمان مطلوب قبل التوليد.')}
  catch(e){setGeminiStatus('فشل الاتصال. تأكد من نشر Worker وضبط ALLOWED_ORIGINS واسم النطاق. '+(e.message||''),true)}
 };
+$('exportActivity').onclick=()=>{recordActivity('activity-exported','تصدير سجل النشاط','تم تصدير سجل النشاط المحلي.');save();renderActivity();const blob=new Blob([JSON.stringify({schemaVersion:1,exportedAt:new Date().toISOString(),activity:db.activity},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nexus-video-activity.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+$('clearActivity').onclick=()=>{if(!confirm('سيُحذف سجل النشاط المحلي بالكامل. هل تريد المتابعة؟'))return;db.activity=[];save();renderActivity()};
 $('generateGemini').onclick=async()=>{
  if(!geminiSettings.endpoint||!geminiSettings.siteKey){setGeminiStatus('أكمل إعداد رابط Worker وTurnstile أولًا.',true);return}
  if(!turnstileToken){if(!window.turnstile)renderTurnstileWidget();setGeminiStatus('أكمل فحص Turnstile ثم اضغط توليد بالذكاء الاصطناعي.',true);return}
@@ -249,6 +281,8 @@ $('generateGemini').onclick=async()=>{
   const data=await res.json();
   if(!res.ok||!data.ok)throw Error(data.error||('HTTP '+res.status));
   $('wOutput').value=data.text;
+  recordActivity('ai-text-generated','توليد نص عبر البوابة',action);
+  save();renderActivity();
   setGeminiStatus('نجح التوليد باستخدام '+data.model+(data.usage?' · اكتمل الطلب':'')+'. انسخ النتيجة أو صدّرها وراجعها قبل الاعتماد.');
   try{window.turnstile?.reset(turnstileWidgetId)}catch(_){}turnstileToken='';
  }catch(e){setGeminiStatus('تعذر التوليد: '+(e.message||'خطأ غير معروف')+'. افحص إعدادات Worker والحصة المجانية ثم أعد فحص Turnstile.',true)}
@@ -271,13 +305,14 @@ function plBuildPrompt(){
   prompt='Create one photorealistic cinematic film shot, not a montage.\nCHARACTER IDENTITY LOCK:\n'+identity+'\nVISIBLE ACTION: '+(action||'[describe the visible action]')+'\nLOCATION / LIGHTING / ATMOSPHERE: '+(world||'[describe setting and lighting]')+'\nCAMERA: '+camera+'\nMaintain natural anatomy, consistent wardrobe, coherent shadows, plausible motion and continuity. Avoid face drift, warped eyes, extra fingers, flickering details, floating objects, abrupt cuts and unrequested text.';
  }
  $('plOutput').value=prompt;
+ recordActivity('prompt-generated','إنشاء برومبت سينمائي',name+' · '+mode);
  savePromptLabDraft();
  return prompt;
 }
 $('plLoadCharacter').onclick=()=>{const c=db.characters.find(x=>x.id===$('plSavedCharacter').value);if(!c){setGeminiStatus('اختر شخصية محفوظة أولًا.',true);return;}$('plName').value=c.name;$('plRules').value=c.desc||'';savePromptLabDraft();setGeminiStatus('تم تحميل وصف الشخصية المحفوظة إلى قفل الهوية. راجع التفاصيل قبل إنشاء البرومبت.');};
 $('plBuild').onclick=plBuildPrompt;
-$('plCopy').onclick=async()=>{const v=$('plOutput').value||plBuildPrompt();try{await navigator.clipboard.writeText(v);setGeminiStatus('تم نسخ البرومبت من مختبر المشاهد.')}catch(_){$('plOutput').focus();$('plOutput').select();}};
-$('plSaveScene').onclick=()=>{const prompt=$('plOutput').value||plBuildPrompt();const name=($('plName').value.trim()||'مشهد جديد')+' — '+({cinematic:'سينمائي',image:'تحريك صورة',dialogue:'حوار'}[$('plTemplate').value]);db.scenes.push({id:id(),name,prompt,project:$('plSavedProject').value,character:$('plSavedCharacter').value});save();render();setGeminiStatus('تم حفظ البرومبت كمشهد وربطه بالمشروع والشخصية المحددين.');};
+$('plCopy').onclick=async()=>{const v=$('plOutput').value||plBuildPrompt();try{await navigator.clipboard.writeText(v);recordActivity('prompt-copied','نسخ برومبت من المختبر','تم نسخ البرومبت إلى الحافظة.');save();renderActivity();setGeminiStatus('تم نسخ البرومبت من مختبر المشاهد.')}catch(_){$('plOutput').focus();$('plOutput').select();}};
+$('plSaveScene').onclick=()=>{const prompt=$('plOutput').value||plBuildPrompt();const name=($('plName').value.trim()||'مشهد جديد')+' — '+({cinematic:'سينمائي',image:'تحريك صورة',dialogue:'حوار'}[$('plTemplate').value]);db.scenes.push({id:id(),name,prompt,project:$('plSavedProject').value,character:$('plSavedCharacter').value});recordActivity('scene-created','حفظ برومبت كمشهد',name);save();render();setGeminiStatus('تم حفظ البرومبت كمشهد وربطه بالمشروع والشخصية المحددين.');};
 
 const PL_DRAFT_KEY='nexus-prompt-lab-draft-v1';
 const PL_DRAFT_FIELDS=['plSavedProject','plSavedCharacter','plName','plFace','plHairEyes','plWardrobe','plRules','plTemplate','plAction','plWorld','plCamera','plLanguage','plOutput'];
