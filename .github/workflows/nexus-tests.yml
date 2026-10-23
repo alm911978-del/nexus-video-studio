@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - feature/nexus-orchestrator-foundation
+      - feature/nexus-video-engine-v1
   pull_request:
     branches:
       - main
@@ -26,3 +27,18 @@ jobs:
         run: npm run test:nexus
       - name: Run Worker gateway security tests
         run: npm test --prefix worker
+
+  engine-api-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install engine dependencies
+        run: python -m pip install -r engine/requirements.txt
+      - name: Run engine API tests
+        working-directory: engine
+        run: python -m pytest -q
