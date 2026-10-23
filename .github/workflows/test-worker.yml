@@ -1,0 +1,34 @@
+name: NEXUS Worker Tests
+
+on:
+  push:
+    paths:
+      - "worker/**"
+      - ".github/workflows/test-worker.yml"
+  pull_request:
+    paths:
+      - "worker/**"
+      - ".github/workflows/test-worker.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nexus-worker-tests
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run gateway security tests
+        working-directory: worker
+        run: npm test
