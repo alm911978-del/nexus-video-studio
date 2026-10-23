@@ -26,6 +26,29 @@ def _ffmpeg_path() -> str | None:
     return shutil.which(configured)
 
 
+def _has_audio_stream(video_path: Path) -> bool:
+    """Return whether ffprobe detects an audio stream; fail closed if probing fails."""
+    ffprobe = shutil.which(os.getenv("FFPROBE_PATH", "ffprobe"))
+    if not ffprobe:
+        raise HTTPException(
+            status_code=503,
+            detail="FFprobe is required to safely mix audio with an existing video track.",
+        )
+    try:
+        probe = subprocess.run(
+            [
+                ffprobe, "-v", "error", "-select_streams", "a:0",
+                "-show_entries", "stream=index", "-of", "csv=p=0", str(video_path),
+            ],
+            capture_output=True, text=True, timeout=20,
+        )
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=408, detail="Video stream inspection timed out.")
+    if probe.returncode != 0:
+        raise HTTPException(status_code=422, detail="The uploaded video could not be inspected.")
+    return bool(probe.stdout.strip())
+
+
 @app.get("/health")
 def health() -> dict:
     return {
@@ -103,9 +126,10 @@ async def mux_audio(
                         raise HTTPException(status_code=413, detail="Each upload is limited to 500 MB.")
                     handle.write(chunk)
 
-        if video_audio_policy == "mix":
+        if video_audio_policy == "mix" and _has_audio_stream(input_video):
+            delay_ms = int(audio_start_seconds * 1000)
             filter_complex = (
-                f"[1:a]adelay={int(audio_start_seconds * 1000)}|{int(audio_start_seconds * 1000)}[voice];"
+                f"[1:a]adelay={delay_ms}|{delay_ms}[voice];"
                 "[0:a][voice]amix=inputs=2:duration=first:dropout_transition=2[aout]"
             )
             command = [
@@ -115,6 +139,7 @@ async def mux_audio(
                 str(output_video),
             ]
         else:
+            # A silent source has nothing to mix; attach the supplied audio instead.
             command = [
                 ffmpeg, "-y", "-i", str(input_video), "-itsoffset", str(audio_start_seconds),
                 "-i", str(input_audio), "-map", "0:v:0", "-map", "1:a:0",
