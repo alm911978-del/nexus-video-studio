@@ -32,20 +32,30 @@ test("backup normalizer rejects non-objects and missing collections", () => {
   assert.equal(normalizeDatabase({ projects: [], characters: [] }).ok, false);
 });
 
-test("unsafe or duplicate IDs are replaced with unique safe IDs", () => {
+test("unsafe record IDs are replaced with safe IDs", () => {
   const source = validBackup();
   source.projects[0].id = 'x" onclick="alert(1)';
-  source.characters[0].id = "project_1";
-  const ids = ["safe_replacement", "safe_character", "safe_scene"];
-  const result = normalizeDatabase(source, { idFactory: () => ids.shift() });
+  const ids = ["safe_replacement"];
+  const result = normalizeDatabase(source, { idFactory: () => ids.shift() || "generated_safe_id" });
   assert.equal(result.ok, true);
-  assert.match(result.data.projects[0].id, /^[A-Za-z0-9_-]+$/);
   assert.equal(result.data.projects[0].id, "safe_replacement");
-  assert.equal(result.data.characters[0].id, "safe_character");
-  assert.equal(result.data.scenes[0].id, "scene_1");
-  assert.equal(result.data.scenes[0].project, "");
-  assert.equal(result.data.scenes[0].character, "");
+  assert.match(result.data.projects[0].id, /^[A-Za-z0-9_-]+$/);
+  assert.equal(result.data.characters[0].id, "character_1");
   assert.ok(result.warnings.length > 0);
+});
+
+test("duplicate IDs are replaced and project/character references stay correctly typed", () => {
+  const source = validBackup();
+  source.characters[0].id = "project_1";
+  source.scenes[0].character = "project_1";
+  const result = normalizeDatabase(source, { idFactory: () => "safe_character" });
+  assert.equal(result.ok, true);
+  assert.equal(result.data.projects[0].id, "project_1");
+  assert.equal(result.data.characters[0].id, "safe_character");
+  assert.equal(result.data.scenes[0].project, "project_1");
+  assert.equal(result.data.scenes[0].character, "safe_character");
+  const ids = [...result.data.projects, ...result.data.characters, ...result.data.scenes].map(x => x.id);
+  assert.equal(new Set(ids).size, ids.length);
 });
 
 test("invalid records and orphan associations are safely discarded", () => {
@@ -69,12 +79,4 @@ test("large text and unsupported aspect ratios are bounded and normalized", () =
   assert.equal(result.data.projects[0].summary.length, 6000);
   assert.equal(result.data.projects[0].ratio, "9:16 عمودي");
   assert.equal(result.data.scenes[0].prompt.length, 20000);
-});
-
-test("record IDs remain unique across entity types", () => {
-  const source = validBackup();
-  source.characters[0].id = source.projects[0].id;
-  const result = normalizeDatabase(source);
-  const ids = [...result.data.projects, ...result.data.characters, ...result.data.scenes].map(x => x.id);
-  assert.equal(new Set(ids).size, ids.length);
 });
