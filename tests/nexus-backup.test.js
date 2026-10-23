@@ -114,6 +114,37 @@ test("prompt lab draft rejects orphan links and bounds untrusted fields", () => 
   assert.ok(result.warnings.length >= 3);
 });
 
+test("activity history keeps only validated fields and sorts by timestamp", () => {
+  const source = validBackup();
+  source.activity = [
+    { id: "activity_late", type: "scene-edited", title: "تعديل مشهد", detail: "وصف", at: "2026-10-23T02:00:00.000Z", secret: "drop" },
+    { id: "activity_early", type: "project-created", title: "إنشاء مشروع", detail: "", at: "2026-10-23T01:00:00.000Z" }
+  ];
+  const result = normalizeDatabase(source);
+  assert.equal(result.ok, true);
+  assert.equal(result.data.activity.length, 2);
+  assert.equal(result.data.activity[0].id, "activity_early");
+  assert.equal(result.data.activity[1].id, "activity_late");
+  assert.equal("secret" in result.data.activity[1], false);
+});
+
+test("activity history drops malformed entries and retains only the latest 200 records", () => {
+  const source = validBackup();
+  source.activity = Array.from({ length: 205 }, (_, index) => ({
+    id: "activity_" + index,
+    type: "scene-created",
+    title: "عملية " + index,
+    detail: "detail",
+    at: new Date(Date.UTC(2026, 0, 1, 0, 0, index)).toISOString()
+  }));
+  source.activity.push({ id: "bad_event", type: "unknown-type", title: "غير معروف", at: "not-a-date" });
+  const result = normalizeDatabase(source);
+  assert.equal(result.ok, true);
+  assert.equal(result.data.activity.length, 200);
+  assert.equal(result.data.activity[0].title, "عملية 5");
+  assert.ok(result.warnings.length > 0);
+});
+
 test("large text and unsupported aspect ratios are bounded and normalized", () => {
   const source = validBackup();
   source.projects[0].summary = "x".repeat(100000);
