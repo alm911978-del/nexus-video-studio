@@ -42,3 +42,17 @@ test("scene library supports search and edit-in-place", () => {
   assert.match(moduleSource, /Object\.assign\(existing,values\)/);
   assert.match(moduleSource, /selectedSceneProject/);
 });
+
+test("local activity page exposes export and clear actions and logs only explicit operations", () => {
+  assert.match(html, /data-page="activity"/);
+  assert.match(html, /id="activity"/);
+  assert.match(html, /id="activityList"/);
+  assert.match(html, /id="exportActivity"/);
+  assert.match(html, /id="clearActivity"/);
+  assert.match(moduleSource, /function recordActivity\(/);
+  assert.match(moduleSource, /db\.activity\.slice\(-200\)/);
+  assert.match(moduleSource, /recordActivity\('scene-edited'/);
+  assert.match(moduleSource, /recordActivity\('backup-imported'/);
+  assert.match(moduleSource, /recordActivity\('ai-text-generated'/);
+  assert.match(moduleSource, /توليد الفيديو.*غير موصولة/);
+});
