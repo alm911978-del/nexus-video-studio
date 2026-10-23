@@ -19,6 +19,7 @@ A transparent, provider-neutral workspace for planning cinematic scenes and orch
 - [x] Keep prompt-lab drafts in local browser storage.
 - [x] Add schema-versioned JSON backup export and validated import, including the prompt-lab draft.
 - [x] Add a searchable scene library and edit-in-place flow.
+- [x] Add a bounded local activity history with JSON export and clear-history control.
 - [x] Bound imported record counts and text lengths; replace unsafe/duplicate IDs; detach orphan scene references.
 - [x] Add UI smoke tests for JavaScript syntax, duplicate HTML IDs and missing static DOM targets.
 - [ ] Add local job history with timestamps, provider, status and verified output references.
