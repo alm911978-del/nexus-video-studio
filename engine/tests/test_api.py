@@ -20,6 +20,7 @@ def test_capabilities_do_not_claim_video_generation():
     payload = response.json()
     assert payload["video_generation"]["available"] is False
     assert payload["video_generation"]["status"] == "not_configured"
+    assert payload["audio_postproduction"]["available"] in (True, False)
 
 
 def test_generate_fails_honestly_without_provider():
@@ -29,7 +30,7 @@ def test_generate_fails_honestly_without_provider():
 
 
 def test_audio_mux_reports_missing_ffmpeg(tmp_path, monkeypatch):
-    # Missing runtime dependency must be reported explicitly.
+    # Missing runtime dependency must be reported explicitly before processing uploads.
     monkeypatch.setenv("FFMPEG_PATH", str(tmp_path / "nonexistent-ffmpeg"))
     response = client.post(
         "/api/v1/audio/mux",
@@ -39,4 +40,20 @@ def test_audio_mux_reports_missing_ffmpeg(tmp_path, monkeypatch):
         },
         data={"audio_start_seconds": "0", "video_audio_policy": "replace"},
     )
-    assert response.status_code == 503  # missing FFmpeg is reported before uploads are processed
+    assert response.status_code == 503
+    assert "FFmpeg" in response.json()["detail"]
+
+
+def test_audio_mux_rejects_negative_offset_when_ffmpeg_is_available(monkeypatch):
+    # Exercise request validation without launching FFmpeg.
+    monkeypatch.setattr("app._ffmpeg_path", lambda: "/usr/bin/ffmpeg")
+    response = client.post(
+        "/api/v1/audio/mux",
+        files={
+            "video": ("clip.mp4", b"placeholder", "video/mp4"),
+            "audio": ("voice.wav", b"placeholder", "audio/wav"),
+        },
+        data={"audio_start_seconds": "-1", "video_audio_policy": "replace"},
+    )
+    assert response.status_code == 400
+    assert "between 0 and 3600" in response.json()["detail"]
