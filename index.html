@@ -95,6 +95,7 @@ const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function empty(msg){return '<div class="empty">'+msg+'</div>'}
 function render(){
+const selectedPLProject=$('plSavedProject')?.value||'',selectedPLCharacter=$('plSavedCharacter')?.value||'';
 $('projectList').innerHTML=db.projects.length?db.projects.map(p=>'<article class="card"><h3>'+esc(p.name)+'</h3><span class="pill">'+esc(p.ratio)+'</span><p class="muted">'+esc(p.style)+'</p><p>'+esc(p.summary||'لا يوجد ملخص بعد')+'</p><button class="danger" data-del="project" data-id="'+esc(p.id)+'">حذف</button></article>').join(''):empty('لا توجد مشاريع بعد. أنشئ مشروعك الأول.');
 $('characterList').innerHTML=db.characters.length?db.characters.map(c=>'<article class="card"><h3>'+esc(c.name)+'</h3><p>'+esc(c.desc)+'</p><button class="danger" data-del="character" data-id="'+esc(c.id)+'">حذف</button></article>').join(''):empty('أضف شخصية لحفظ ملامحها ووصفها المرجعي.');
 $('sceneList').innerHTML=db.scenes.length?db.scenes.map(s=>{let p=db.projects.find(x=>x.id===s.project),c=db.characters.find(x=>x.id===s.character);return '<article class="item"><h3>'+esc(s.name)+'</h3><p class="muted">'+esc(p?.name||'بلا مشروع')+' · '+esc(c?.name||'بلا شخصية')+'</p><p>'+esc(s.prompt)+'</p><div class="row"><button data-copy="'+esc(s.id)+'">نسخ الوصف</button><button class="danger" data-del="scene" data-id="'+esc(s.id)+'">حذف</button></div></article>'}).join(''):empty('لم تضف مشاهد بعد.');
@@ -102,6 +103,8 @@ $('sProject').innerHTML='<option value="">بدون مشروع</option>'+db.proje
 $('sCharacter').innerHTML='<option value="">بدون شخصية</option>'+db.characters.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('');
 $('plSavedProject').innerHTML='<option value="">بدون مشروع</option>'+db.projects.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');
 $('plSavedCharacter').innerHTML='<option value="">بدون شخصية</option>'+db.characters.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('');
+if(db.projects.some(p=>p.id===selectedPLProject))$('plSavedProject').value=selectedPLProject;
+if(db.characters.some(c=>c.id===selectedPLCharacter))$('plSavedCharacter').value=selectedPLCharacter;
 }
 document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===b.dataset.page));render()});
 $('newProject').onclick=()=> $('projectForm').hidden=false;$('cancelProject').onclick=()=> $('projectForm').hidden=true;
@@ -241,6 +244,7 @@ function plBuildPrompt(){
   prompt='Create one photorealistic cinematic film shot, not a montage.\nCHARACTER IDENTITY LOCK:\n'+identity+'\nVISIBLE ACTION: '+(action||'[describe the visible action]')+'\nLOCATION / LIGHTING / ATMOSPHERE: '+(world||'[describe setting and lighting]')+'\nCAMERA: '+camera+'\nMaintain natural anatomy, consistent wardrobe, coherent shadows, plausible motion and continuity. Avoid face drift, warped eyes, extra fingers, flickering details, floating objects, abrupt cuts and unrequested text.';
  }
  $('plOutput').value=prompt;
+ savePromptLabDraft();
  return prompt;
 }
 $('plLoadCharacter').onclick=()=>{const c=db.characters.find(x=>x.id===$('plSavedCharacter').value);if(!c){setGeminiStatus('اختر شخصية محفوظة أولًا.',true);return;}$('plName').value=c.name;$('plRules').value=c.desc||'';savePromptLabDraft();setGeminiStatus('تم تحميل وصف الشخصية المحفوظة إلى قفل الهوية. راجع التفاصيل قبل إنشاء البرومبت.');};
@@ -257,10 +261,10 @@ function savePromptLabDraft(){
   localStorage.setItem(PL_DRAFT_KEY,JSON.stringify(draft));
  }catch(_){setGeminiStatus('تعذر حفظ مسودة المختبر محليًا؛ صدّر نسخة احتياطية من بيانات المشروع عند الحاجة.',true)}
 }
+render();
 try{
  const draft=JSON.parse(localStorage.getItem(PL_DRAFT_KEY)||'{}');
  for(const fieldId of PL_DRAFT_FIELDS){const field=$(fieldId);if(field&&typeof draft[fieldId]==='string'&&(field.tagName!=='SELECT'||[...field.options].some(option=>option.value===draft[fieldId])))field.value=draft[fieldId].slice(0,12000);}
 }catch(_){}
 for(const fieldId of PL_DRAFT_FIELDS){const field=$(fieldId);if(field){field.addEventListener('input',savePromptLabDraft);field.addEventListener('change',savePromptLabDraft)}}
-render();
 </script></body></html>
