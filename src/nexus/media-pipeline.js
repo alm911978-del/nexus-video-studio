@@ -56,12 +56,20 @@ export async function runMediaJob({ mode, providers, input = {}, onProgress = ()
   try {
     onProgress({ status: "submitted", providerId: selected.provider.id });
     const result = await selected.provider.adapter({ mode, input: payload, onProgress });
-    if (!result || result.status !== "completed" || !isSafeAssetUrl(result.assetUrl)) {
+    if (!result || result.status !== "completed") {
       return {
         ok: false,
-        status: "provider-did-not-return-verified-asset",
+        status: "provider-not-completed",
         providerId: selected.provider.id,
-        detail: "The adapter did not return a completed result with an absolute HTTPS asset URL without embedded credentials. URL validation does not verify the remote file contents."
+        detail: "The provider adapter did not report a completed job."
+      };
+    }
+    if (!isSafeAssetUrl(result.assetUrl)) {
+      return {
+        ok: false,
+        status: "provider-returned-invalid-asset-url",
+        providerId: selected.provider.id,
+        detail: "Expected an absolute HTTPS URL without embedded credentials or control characters. URL validation does not verify remote file availability or contents."
       };
     }
     return {
@@ -70,6 +78,7 @@ export async function runMediaJob({ mode, providers, input = {}, onProgress = ()
       providerId: selected.provider.id,
       assetUrl: result.assetUrl.trim(),
       mediaType: typeof result.mediaType === "string" ? result.mediaType : "unknown",
+      completionNote: "Provider reported completion and returned a syntactically valid HTTPS URL; remote file availability and contents were not independently verified.",
       qualityNote: "Requested quality is not a guarantee; verify the returned asset and provider metadata."
     };
   } catch (error) {
