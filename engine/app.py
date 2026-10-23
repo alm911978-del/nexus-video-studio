@@ -11,7 +11,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from starlette.background import BackgroundTask
 
-APP_VERSION = "0.1.0"
+APP_VERSION = "0.1.1"
 app = FastAPI(
     title="NEXUS VIDEO 5.0 Engine API",
     version=APP_VERSION,
