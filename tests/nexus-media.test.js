@@ -68,7 +68,7 @@ test("media pipeline rejects insecure, malformed and credential-bearing asset UR
     "http://example.test/video.mp4",
     "/relative/video.mp4",
     "https://user:secret@example.test/video.mp4",
-    "https://example.test/video.mp4\\nforged-header: value"
+    "https://example.test/video.mp4" + String.fromCharCode(10) + "forged-header: value"
   ];
   for (const assetUrl of unsafeUrls) {
     const providers = [{
