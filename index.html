@@ -49,6 +49,8 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid
 <div class="grid">
 <div class="card stack">
 <h3>قفل هوية الشخصية</h3>
+<label>استيراد شخصية محفوظة</label>
+<div class="row"><select id="plSavedCharacter"><option value="">اختر شخصية محفوظة…</option></select><button id="plLoadCharacter">تحميل الوصف</button></div>
 <label>اسم الشخصية</label><input id="plName" placeholder="اسم الشخصية">
 <label>ملامح الوجه والعلامات المميزة</label><textarea id="plFace" placeholder="شكل الوجه، الندبة، تفاصيل ثابتة..."></textarea>
 <label>الشعر والعينان</label><textarea id="plHairEyes" placeholder="لون الشعر وتسريحته، لون العينين..."></textarea>
@@ -98,6 +100,8 @@ $('characterList').innerHTML=db.characters.length?db.characters.map(c=>'<article
 $('sceneList').innerHTML=db.scenes.length?db.scenes.map(s=>{let p=db.projects.find(x=>x.id===s.project),c=db.characters.find(x=>x.id===s.character);return '<article class="item"><h3>'+esc(s.name)+'</h3><p class="muted">'+esc(p?.name||'بلا مشروع')+' · '+esc(c?.name||'بلا شخصية')+'</p><p>'+esc(s.prompt)+'</p><div class="row"><button data-copy="'+esc(s.id)+'">نسخ الوصف</button><button class="danger" data-del="scene" data-id="'+esc(s.id)+'">حذف</button></div></article>'}).join(''):empty('لم تضف مشاهد بعد.');
 $('sProject').innerHTML='<option value="">بدون مشروع</option>'+db.projects.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('');
 $('sCharacter').innerHTML='<option value="">بدون شخصية</option>'+db.characters.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('');
+$('plSavedProject').innerHTML='<option value="">بدون مشروع</option>'+db.projects.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');
+$('plSavedCharacter').innerHTML='<option value="">بدون شخصية</option>'+db.characters.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('');
 }
 document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===b.dataset.page));render()});
 $('newProject').onclick=()=> $('projectForm').hidden=false;$('cancelProject').onclick=()=> $('projectForm').hidden=true;
@@ -118,7 +122,7 @@ $('draftScenePrompt').onclick=()=>{
 };
 document.addEventListener('click',async e=>{let d=e.target.dataset;if(d.del){if(!confirm('هل تريد حذف هذا العنصر؟'))return;const collection=d.del==='project'?'projects':d.del==='character'?'characters':'scenes';db[collection]=db[collection].filter(x=>x.id!==d.id);if(d.del==='project')db.scenes.forEach(scene=>{if(scene.project===d.id)scene.project=''});if(d.del==='character')db.scenes.forEach(scene=>{if(scene.character===d.id)scene.character=''});save();render()}if(d.copy){let s=db.scenes.find(x=>x.id===d.copy);if(s){try{await navigator.clipboard.writeText(s.prompt);alert('تم نسخ وصف المشهد')}catch(_){prompt('انسخ وصف المشهد:',s.prompt)}}}});
 $('exportData').onclick=()=>{let backup={schemaVersion:1,exportedAt:new Date().toISOString(),...db};let blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nexus-video-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);$('backupStatus').textContent='تم تجهيز ملف النسخة الاحتياطية (Schema v1).'};
-$('importButton').onclick=()=> $('importFile').click();$('importFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());const normalized=normalizeDatabase(x);if(!normalized.ok)throw Error(normalized.error);const warningText=normalized.warnings.length?'\\nملاحظات التنظيف: '+normalized.warnings.join(' '):'';if(!confirm('سيستبدل الاستيراد البيانات الحالية بعد التحقق والتنظيف. هل تريد المتابعة؟'+warningText))return;db=normalized.data;save();render();$('backupStatus').textContent='تم استيراد البيانات والتحقق من بنيتها.'+(normalized.warnings.length?' عدد الملاحظات: '+normalized.warnings.length+'.':' لا توجد ملاحظات.')}catch(err){alert(err?.message||'الملف غير صالح أو لا يطابق تنسيق النسخة الاحتياطية.')}finally{e.target.value=''}};
+$('importButton').onclick=()=> $('importFile').click();$('importFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{if(f.size>5*1024*1024)throw Error('حجم النسخة الاحتياطية يتجاوز الحد المسموح (5 MB).');let x=JSON.parse(await f.text());const normalized=normalizeDatabase(x);if(!normalized.ok)throw Error(normalized.error);const warningText=normalized.warnings.length?'\nملاحظات التنظيف: '+normalized.warnings.join(' '):'';if(!confirm('سيستبدل الاستيراد البيانات الحالية بعد التحقق والتنظيف. هل تريد المتابعة؟'+warningText))return;db=normalized.data;save();render();$('backupStatus').textContent='تم استيراد البيانات والتحقق من بنيتها.'+(normalized.warnings.length?' عدد الملاحظات: '+normalized.warnings.length+'.':' لا توجد ملاحظات.')}catch(err){alert(err?.message||'الملف غير صالح أو لا يطابق تنسيق النسخة الاحتياطية.')}finally{e.target.value=''}};
 function buildWriterPrompt(){
 const idea=$('wIdea').value.trim();if(!idea){alert('اكتب فكرة المسلسل أولًا');return ''}
 const genre=$('wGenre').value, episodes=$('wEpisodes').value, duration=$('wDuration').value, tone=$('wTone').value, setting=$('wSetting').value.trim()||'اقترح مكانًا مناسبًا للقصة', notes=$('wNotes').value.trim()||'لا توجد قيود إضافية';
@@ -239,9 +243,24 @@ function plBuildPrompt(){
  $('plOutput').value=prompt;
  return prompt;
 }
+$('plLoadCharacter').onclick=()=>{const c=db.characters.find(x=>x.id===$('plSavedCharacter').value);if(!c){setGeminiStatus('اختر شخصية محفوظة أولًا.',true);return;}$('plName').value=c.name;$('plRules').value=c.desc||'';savePromptLabDraft();setGeminiStatus('تم تحميل وصف الشخصية المحفوظة إلى قفل الهوية. راجع التفاصيل قبل إنشاء البرومبت.');};
 $('plBuild').onclick=plBuildPrompt;
 $('plCopy').onclick=async()=>{const v=$('plOutput').value||plBuildPrompt();try{await navigator.clipboard.writeText(v);setGeminiStatus('تم نسخ البرومبت من مختبر المشاهد.')}catch(_){$('plOutput').focus();$('plOutput').select();}};
-$('plSaveScene').onclick=()=>{const prompt=$('plOutput').value||plBuildPrompt();const name=($('plName').value.trim()||'مشهد جديد')+' — '+({cinematic:'سينمائي',image:'تحريك صورة',dialogue:'حوار'}[$('plTemplate').value]);db.scenes.push({id:id(),name,prompt,project:'',character:''});save();render();setGeminiStatus('تم حفظ البرومبت كمشهد محلي.');};
+$('plSaveScene').onclick=()=>{const prompt=$('plOutput').value||plBuildPrompt();const name=($('plName').value.trim()||'مشهد جديد')+' — '+({cinematic:'سينمائي',image:'تحريك صورة',dialogue:'حوار'}[$('plTemplate').value]);db.scenes.push({id:id(),name,prompt,project:$('plSavedProject').value,character:$('plSavedCharacter').value});save();render();setGeminiStatus('تم حفظ البرومبت كمشهد وربطه بالمشروع والشخصية المحددين.');};
 
+const PL_DRAFT_KEY='nexus-prompt-lab-draft-v1';
+const PL_DRAFT_FIELDS=['plSavedProject','plSavedCharacter','plName','plFace','plHairEyes','plWardrobe','plRules','plTemplate','plAction','plWorld','plCamera','plLanguage','plOutput'];
+function savePromptLabDraft(){
+ try{
+  const draft={};
+  for(const fieldId of PL_DRAFT_FIELDS){const field=$(fieldId);if(field)draft[fieldId]=String(field.value||'').slice(0,12000);}
+  localStorage.setItem(PL_DRAFT_KEY,JSON.stringify(draft));
+ }catch(_){setGeminiStatus('تعذر حفظ مسودة المختبر محليًا؛ صدّر نسخة احتياطية من بيانات المشروع عند الحاجة.',true)}
+}
+try{
+ const draft=JSON.parse(localStorage.getItem(PL_DRAFT_KEY)||'{}');
+ for(const fieldId of PL_DRAFT_FIELDS){const field=$(fieldId);if(field&&typeof draft[fieldId]==='string'&&(field.tagName!=='SELECT'||[...field.options].some(option=>option.value===draft[fieldId])))field.value=draft[fieldId].slice(0,12000);}
+}catch(_){}
+for(const fieldId of PL_DRAFT_FIELDS){const field=$(fieldId);if(field){field.addEventListener('input',savePromptLabDraft);field.addEventListener('change',savePromptLabDraft)}}
 render();
 </script></body></html>
