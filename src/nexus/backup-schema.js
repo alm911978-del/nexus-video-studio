@@ -13,6 +13,11 @@ const LIMITS = Object.freeze({
 
 const SAFE_ID = /^[A-Za-z0-9_-]{1,100}$/;
 const ALLOWED_RATIOS = new Set(["9:16 عمودي", "16:9 أفقي", "1:1 مربع"]);
+const PROMPT_TEXT_FIELDS = [
+  "plName", "plFace", "plHairEyes", "plWardrobe", "plRules",
+  "plAction", "plWorld", "plCamera", "plLanguage", "plOutput"
+];
+const PROMPT_TEMPLATES = new Set(["cinematic", "image", "dialogue"]);
 
 function cleanText(value, maxLength) {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
@@ -131,9 +136,46 @@ export function normalizeDatabase(input, { idFactory = defaultIdFactory } = {}) 
     return [{ id, name, prompt, project, character }];
   });
 
+  const projectIds = new Set(projects.map(record => record.id));
+  const characterIds = new Set(characters.map(record => record.id));
+  const draftSource = input.promptLabDraft;
+  const promptLabDraft = {};
+
+  if (draftSource && typeof draftSource === "object" && !Array.isArray(draftSource)) {
+    for (const field of PROMPT_TEXT_FIELDS) {
+      if (typeof draftSource[field] === "string") {
+        const clipped = draftSource[field].slice(0, 12000);
+        if (clipped.length !== draftSource[field].length) warnings.push("تم تقليص طول مسودة مختبر البرومبتات.");
+        promptLabDraft[field] = clipped;
+      }
+    }
+
+    const template = draftSource.plTemplate;
+    if (typeof template === "string") {
+      promptLabDraft.plTemplate = PROMPT_TEMPLATES.has(template) ? template : "cinematic";
+      if (!PROMPT_TEMPLATES.has(template)) warnings.push("تمت إعادة نوع قالب غير معروف إلى القالب السينمائي.");
+    }
+
+    const selectedProject = typeof draftSource.plSavedProject === "string" ? draftSource.plSavedProject : "";
+    if (!selectedProject || projectIds.has(selectedProject)) {
+      promptLabDraft.plSavedProject = selectedProject;
+    } else {
+      promptLabDraft.plSavedProject = "";
+      warnings.push("تمت إزالة مشروع مختار من مسودة المختبر لأنه غير موجود.");
+    }
+
+    const selectedCharacter = typeof draftSource.plSavedCharacter === "string" ? draftSource.plSavedCharacter : "";
+    if (!selectedCharacter || characterIds.has(selectedCharacter)) {
+      promptLabDraft.plSavedCharacter = selectedCharacter;
+    } else {
+      promptLabDraft.plSavedCharacter = "";
+      warnings.push("تمت إزالة شخصية مختارة من مسودة المختبر لأنها غير موجودة.");
+    }
+  }
+
   return {
     ok: true,
-    data: { projects, characters, scenes },
+    data: { projects, characters, scenes, promptLabDraft },
     warnings: [...new Set(warnings)]
   };
 }
