@@ -65,7 +65,14 @@ test("published HTML inline JavaScript parses and includes secure Gemini control
     .map(match => match[1])
     .filter(source => source.trim());
   assert.ok(inlineScripts.length > 0, "expected an inline application script");
-  for (const source of inlineScripts) new Script(source);
+  for (const source of inlineScripts) {
+    // The browser entrypoint is a module; strip its static import for Node's classic Script parser.
+    const parseableSource = source.replace(/^\s*import\s+\{[^}]+\}\s+from\s+["'][^"']+["'];\s*/m, "");
+    new Script(parseableSource);
+  }
+  assert.match(html, /import \{ normalizeDatabase \} from ["']\.\/src\/nexus\/backup-schema\.js["']/);
+  const backupSchemaPath = fileURLToPath(new URL("../../src/nexus/backup-schema.js", import.meta.url));
+  assert.doesNotThrow(() => readFileSync(backupSchemaPath, "utf8"));
   assert.match(html, /id="generateGemini"/);
   assert.match(html, /id="turnstileWidget"/);
   assert.match(html, /api\/generate/);
@@ -90,6 +97,44 @@ test("rejects oversized generation payloads", async () => {
     headers: { "content-type": "application/json" }
   }), env);
   assert.equal(res.status, 413);
+});
+
+test("accepts scene-prompt action and returns Gemini text only after Turnstile succeeds", async () => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0, requestedUrl = "", sentBody = null;
+  globalThis.fetch = async (url, options = {}) => {
+    calls += 1;
+    if (String(url).includes("challenges.cloudflare.com/turnstile/v0/siteverify")) {
+      return new Response(JSON.stringify({ success: true, hostname: "alm911978-del.github.io" }), {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      });
+    }
+    requestedUrl = String(url);
+    sentBody = JSON.parse(options.body);
+    return new Response(JSON.stringify({
+      candidates: [{ content: { parts: [{ text: "A cinematic scene prompt." }] } }],
+      usageMetadata: { totalTokenCount: 20 }
+    }), { status: 200, headers: { "content-type": "application/json" } });
+  };
+  try {
+    const res = await worker.fetch(req("/api/generate", {
+      method: "POST",
+      body: JSON.stringify({ action: "scene-prompt", prompt: "A young man enters an Arabian desert.", turnstileToken: "valid-token" }),
+      headers: { "content-type": "application/json" }
+    }), env);
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.ok, true);
+    assert.equal(body.text, "A cinematic scene prompt.");
+    assert.equal(body.model, "gemini-3.8-flash");
+    assert.match(requestedUrl, /generativelanguage\.googleapis\.com/);
+    assert.match(requestedUrl, /gemini-3\.8-flash:generateContent/);
+    assert.match(sentBody.systemInstruction.parts[0].text, /Prompt سينمائي عملي/);
+    assert.equal(calls, 2);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test("enforces daily IP rate limit after successful Turnstile verification", async () => {

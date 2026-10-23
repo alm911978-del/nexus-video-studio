@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "character-example",
+  "name": "اسم الشخصية",
+  "apparentAge": "العمر الظاهري",
+  "face": "وصف ملامح الوجه",
+  "hair": "لون الشعر وتسريحته",
+  "eyes": "لون العينين",
+  "distinguishingMarks": "علامات مميزة",
+  "wardrobe": "الملابس الأساسية",
+  "bodyBuild": "البنية الجسدية",
+  "voice": {
+    "language": "ar",
+    "accent": "حدد اللهجة أو الفصحى",
+    "pitch": "medium",
+    "delivery": "cinematic natural"
+  },
+  "continuityRules": [
+    "لا تغيّر ملامح الوجه بين المشاهد",
+    "حافظ على الملابس والعلامات المميزة",
+    "لا تضف إكسسوارات غير مطلوبة"
+  ],
+  "referenceAssets": [],
+  "notes": "هذا قالب بيانات؛ لا يتضمن صورًا أو صوتًا أو محرك توليد."
+}
