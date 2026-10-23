@@ -64,7 +64,8 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid
 <label>الموقع والإضاءة والأجواء</label><textarea id="plWorld" placeholder="المكان، الوقت، الإضاءة، الطقس..."></textarea>
 <label>حركة الكاميرا</label><input id="plCamera" placeholder="حركة بطيئة للأمام، لقطة قريبة ثابتة...">
 <label>اللغة (للحوار)</label><input id="plLanguage" value="العربية الفصحى">
-<div class="row"><button class="primary" id="plBuild">إنشاء البرومبت</button><button id="plCopy">نسخ</button><button id="plSaveScene">حفظ كمشهد</button></div>
+<div class="row"><button class="primary" id="plBuild">إنشاء البرومبت</button><button id="plGeminiImprove">تحسين عبر Gemini</button><button id="plCopy">نسخ</button><button id="plSaveScene">حفظ كمشهد</button></div>
+<p id="plGeminiStatus" class="muted" role="status" aria-live="polite">التحسين عبر Gemini اختياري ويحتاج إعداد Worker آمنًا ورمز Turnstile صالحًا. لا يولّد هذا الزر فيديو.</p>
 </div>
 </div>
 <label>النتيجة</label><textarea id="plOutput" style="min-height:260px" placeholder="سيظهر البرومبت هنا..."></textarea>
@@ -310,6 +311,27 @@ function plBuildPrompt(){
  return prompt;
 }
 $('plLoadCharacter').onclick=()=>{const c=db.characters.find(x=>x.id===$('plSavedCharacter').value);if(!c){setGeminiStatus('اختر شخصية محفوظة أولًا.',true);return;}$('plName').value=c.name;$('plRules').value=c.desc||'';savePromptLabDraft();setGeminiStatus('تم تحميل وصف الشخصية المحفوظة إلى قفل الهوية. راجع التفاصيل قبل إنشاء البرومبت.');};
+function setPLGeminiStatus(message,isError=false){const el=$('plGeminiStatus');if(el){el.textContent=message;el.style.color=isError?'#dc2626':''}}
+$('plGeminiImprove').onclick=async()=>{
+ const current=$('plOutput').value.trim()||plBuildPrompt();
+ if(!current){setPLGeminiStatus('أنشئ برومبت أولًا ثم أعد المحاولة.',true);return}
+ if(current.length>12000){setPLGeminiStatus('البرومبت أطول من حد البوابة البالغ 12000 حرف. اختصره قبل الإرسال.',true);return}
+ if(!geminiSettings.endpoint||!geminiSettings.siteKey){setPLGeminiStatus('اضبط رابط Worker ومفتاح Turnstile العام من صفحة كاتب المسلسلات أولًا.',true);return}
+ if(!turnstileToken){setPLGeminiStatus('للحصول على رمز الأمان، انتقل إلى كاتب المسلسلات وأكمل فحص Turnstile، ثم عُد إلى المختبر.',true);return}
+ const button=$('plGeminiImprove');button.disabled=true;button.textContent='جارٍ تحسين البرومبت…';
+ setPLGeminiStatus('يرسل البرومبت إلى بوابة Gemini الآمنة…');
+ try{
+  const res=await fetch(geminiSettings.endpoint+'/api/generate',{method:'POST',headers:{'content-type':'application/json','accept':'application/json'},body:JSON.stringify({action:'scene-prompt',prompt:'Refine the following cinematic prompt into a precise production-ready English prompt. Preserve the supplied facts and character identity. Do not invent completed media output. Return only the final prompt.\\n\\n'+current,turnstileToken})});
+  const data=await res.json();
+  if(!res.ok||!data.ok)throw Error(data.error||('HTTP '+res.status));
+  $('plOutput').value=data.text;
+  recordActivity('ai-text-generated','تحسين برومبت عبر Gemini',data.model||'scene-prompt');
+  savePromptLabDraft();renderActivity();
+  setPLGeminiStatus('تم تحسين البرومبت باستخدام '+(data.model||'Gemini')+'. النتيجة نص فقط وليست فيديو مولّدًا.');
+  try{window.turnstile?.reset(turnstileWidgetId)}catch(_){}turnstileToken='';
+ }catch(e){setPLGeminiStatus('تعذر تحسين البرومبت: '+(e.message||'خطأ غير معروف')+'. تحقق من إعدادات Worker والحصة وفحص Turnstile.',true)}
+ finally{button.disabled=false;button.textContent='تحسين عبر Gemini'}
+};
 $('plBuild').onclick=plBuildPrompt;
 $('plCopy').onclick=async()=>{const v=$('plOutput').value||plBuildPrompt();try{await navigator.clipboard.writeText(v);recordActivity('prompt-copied','نسخ برومبت من المختبر','تم نسخ البرومبت إلى الحافظة.');save();renderActivity();setGeminiStatus('تم نسخ البرومبت من مختبر المشاهد.')}catch(_){$('plOutput').focus();$('plOutput').select();}};
 $('plSaveScene').onclick=()=>{const prompt=$('plOutput').value||plBuildPrompt();const name=($('plName').value.trim()||'مشهد جديد')+' — '+({cinematic:'سينمائي',image:'تحريك صورة',dialogue:'حوار'}[$('plTemplate').value]);db.scenes.push({id:id(),name,prompt,project:$('plSavedProject').value,character:$('plSavedCharacter').value});recordActivity('scene-created','حفظ برومبت كمشهد',name);save();render();setGeminiStatus('تم حفظ البرومبت كمشهد وربطه بالمشروع والشخصية المحددين.');};
