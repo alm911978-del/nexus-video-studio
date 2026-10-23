@@ -101,7 +101,7 @@ test("rejects oversized generation payloads", async () => {
 
 test("accepts scene-prompt action and returns Gemini text only after Turnstile succeeds", async () => {
   const originalFetch = globalThis.fetch;
-  let calls = 0;
+  let calls = 0, requestedUrl = "", sentBody = null;
   globalThis.fetch = async (url, options = {}) => {
     calls += 1;
     if (String(url).includes("challenges.cloudflare.com/turnstile/v0/siteverify")) {
@@ -110,10 +110,8 @@ test("accepts scene-prompt action and returns Gemini text only after Turnstile s
         headers: { "content-type": "application/json" }
       });
     }
-    assert.match(String(url), /generativelanguage\.googleapis\.com/);
-    assert.match(String(url), /gemini-3\.8-flash:generateContent/);
-    const sent = JSON.parse(options.body);
-    assert.match(sent.systemInstruction.parts[0].text, /Prompt سینمائي عملي/);
+    requestedUrl = String(url);
+    sentBody = JSON.parse(options.body);
     return new Response(JSON.stringify({
       candidates: [{ content: { parts: [{ text: "A cinematic scene prompt." }] } }],
       usageMetadata: { totalTokenCount: 20 }
@@ -130,6 +128,9 @@ test("accepts scene-prompt action and returns Gemini text only after Turnstile s
     assert.equal(body.ok, true);
     assert.equal(body.text, "A cinematic scene prompt.");
     assert.equal(body.model, "gemini-3.8-flash");
+    assert.match(requestedUrl, /generativelanguage\.googleapis\.com/);
+    assert.match(requestedUrl, /gemini-3\.8-flash:generateContent/);
+    assert.match(sentBody.systemInstruction.parts[0].text, /Prompt سينمائي عملي/);
     assert.equal(calls, 2);
   } finally {
     globalThis.fetch = originalFetch;
