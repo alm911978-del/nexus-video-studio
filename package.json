@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test:nexus": "node --test tests/nexus.test.js tests/nexus-media.test.js"
+    "test:nexus": "node --test tests/nexus.test.js tests/nexus-media.test.js tests/nexus-product.test.js"
   }
 }
