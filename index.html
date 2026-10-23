@@ -89,6 +89,13 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid
 <p class="muted">هذا الزر يفتح Vids في تبويب جديد. لا يعني وجود تكامل برمجي مباشر مع Vids.</p>
 </div>
 <div class="card stack">
+<h3>تجربة محرك مستضاف (اختبار خارجي)</h3>
+<p>هذه روابط لتجربة نماذج فيديو مستضافة من المتصفح. اختر تجربة تعمل حاليًا، ثم اختبر بمقطع قصير. هذا مسار خارجي ولا يعني أن المحرك متصل داخل NEXUS.</p>
+<a href="https://huggingface.co/spaces?search=Wan2.2" target="_blank" rel="noopener noreferrer" style="display:block;text-align:center;text-decoration:none;border-radius:10px;padding:12px;background:#24283a;color:var(--text);font-weight:700">استكشاف تجارب Wan 2.2 ↗</a>
+<a href="https://wan2.video/wan-animate-2" target="_blank" rel="noopener noreferrer" style="display:block;text-align:center;text-decoration:none;border-radius:10px;padding:12px;background:#24283a;color:var(--text);font-weight:700">تجربة تحريك شخصية بالصورة والفيديو ↗</a>
+<p class="muted">قد تتغير الحصة أو الطابور أو حالة الخدمة. تجربة Wan-Animate تحتاج صورة شخصية ومقطع حركة، وهي للتحريك وليست مولّدًا نصيًا عامًا. لا ترفع صورًا حساسة إلى خدمات خارجية.</p>
+</div>
+<div class="card stack">
 <h3>توليد من داخل NEXUS VIDEO</h3>
 <label for="videoPrompt">وصف المشهد</label>
 <textarea id="videoPrompt" placeholder="مثال: لقطة سينمائية واقعية في صحراء سعودية ليلًا، كاميرا تتقدم ببطء، غبار مضاء بضوء أحمر..." maxlength="12000"></textarea>
@@ -105,7 +112,7 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid
 </div>
 <div class="notice">الشفافية: تجهيز الطلب لا ينشئ ملف فيديو. التوليد المباشر داخل NEXUS يحتاج محرك API فعليًا، إعدادًا آمنًا، وتحققًا من التكلفة والحصة قبل تشغيله.</div>
 </section>
-<section id="engine" class="page"><h2>حالة المحركات</h2><div class="item"><h3>إدارة المشاريع والمشاهد</h3><span class="pill">متاح محليًا</span><p class="muted">الحفظ عبر localStorage في المتصفح الحالي.</p></div><div class="item"><h3>توليد الفيديو</h3><span class="pill">غير متصل</span><p class="muted">لا توجد واجهة API متصلة. يلزم اختيار مزود وتكوين الربط بشكل آمن.</p></div><div class="item"><h3>الصوت ومزامنة الشفاه</h3><span class="pill">غير متصل</span><p class="muted">غير متاحين في هذه النسخة.</p></div></section>
+<section id="engine" class="page"><h2>حالة المحركات</h2><div class="item"><h3>إدارة المشاريع والمشاهد</h3><span class="pill">متاح محليًا</span><p class="muted">الحفظ عبر localStorage في المتصفح الحالي.</p></div><div class="item"><h3>توليد الفيديو داخل الموقع</h3><span class="pill">غير متصل</span><p class="muted">لم يتم إثبات اتصال API يعيد ملف فيديو بعد. توجد روابط لتجربة خدمات خارجية من قسم الاستوديو فقط.</p></div><div class="item"><h3>اختبار مزود مستضاف</h3><span class="pill">خارجي / غير مدمج</span><p class="muted">الخطوة التالية: التحقق من تجربة واحدة والحصول على ملف قابل للتشغيل، ثم دراسة API الموثقة قبل بناء الموصل.</p></div><div class="item"><h3>الصوت ومزامنة الشفاه</h3><span class="pill">غير متصل</span><p class="muted">غير متاحين في هذه النسخة.</p></div></section>
 </div></div><div class="footer">NEXUS Ω · NEXUS VIDEO 5.0 · نسخة تجريبية محلية. لا تضع مفاتيح API أو كلمات المرور داخل ملفات الواجهة.</div></main>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 <script type="module">
