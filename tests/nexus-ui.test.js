@@ -33,3 +33,12 @@ test("backup import is normalized and restores the included prompt lab draft", (
   assert.match(moduleSource, /render\(\);\s*restorePromptLabDraft\(\)/);
   assert.match(html, /id="plSavedProject"/);
 });
+
+test("scene library supports search and edit-in-place", () => {
+  assert.match(html, /id="sceneSearch"/);
+  assert.match(html, /id="sceneCount"/);
+  assert.match(moduleSource, /\$\('sceneSearch'\)\.addEventListener\('input',render\)/);
+  assert.match(moduleSource, /data-edit-scene=/);
+  assert.match(moduleSource, /Object\.assign\(existing,values\)/);
+  assert.match(moduleSource, /selectedSceneProject/);
+});
