@@ -11,7 +11,7 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid
 <body><main class="app">
 <header class="top"><div class="brand"><div class="logo">NΩ</div><div><h1>NEXUS VIDEO 5.0</h1><div class="muted">استوديو صناعة الأفلام بالذكاء الاصطناعي</div></div></div><span class="pill">Prototype 0.4 · محلي</span></header>
 <div class="notice"><strong>تنبيه الشفافية:</strong> إدارة المشاريع وكتابة ملفات التطوير تعمل محليًا. توليد الفيديو والصوت ومزامنة الشفاه غير موصولة. لا تستخدم مفاتيح API داخل الواجهة. تُحفظ البيانات في هذا المتصفح فقط.</div>
-<div class="layout"><nav class="panel nav" aria-label="التنقل"><button class="active" data-page="projects">المشاريع</button><button data-page="writer">كاتب المسلسلات</button><button data-page="characters">الشخصيات</button><button data-page="scenes">المشاهد</button><button data-page="promptLab">مختبر البرومبتات</button><button data-page="backup">النسخ الاحتياطي</button><button data-page="activity">سجل النشاط</button><button data-page="engine">حالة المحركات</button></nav>
+<div class="layout"><nav class="panel nav" aria-label="التنقل"><button class="active" data-page="projects">المشاريع</button><button data-page="writer">كاتب المسلسلات</button><button data-page="characters">الشخصيات</button><button data-page="scenes">المشاهد</button><button data-page="promptLab">مختبر البرومبتات</button><button data-page="backup">النسخ الاحتياطي</button><button data-page="activity">سجل النشاط</button><button data-page="videoStudio">توليد الفيديو / Vids</button><button data-page="engine">حالة المحركات</button></nav>
 <div>
 <section id="projects" class="page active"><div class="row"><h2>مشاريعي</h2><button class="primary" id="newProject">＋ مشروع جديد</button></div><div id="projectList" class="grid"></div><div id="projectForm" class="card" hidden><h3>إنشاء مشروع</h3><label>اسم المشروع</label><input id="pName" placeholder="مثال: فارس الصحراء الأخير"><label>ملخص القصة</label><textarea id="pSummary" placeholder="اكتب فكرة الفيلم..."></textarea><div class="row"><div><label>الأسلوب</label><select id="pStyle"><option>سينمائي شبه واقعي</option><option>أنمي</option><option>وثائقي</option><option>خيال علمي</option></select></div><div><label>نسبة العرض</label><select id="pRatio"><option>9:16 عمودي</option><option>16:9 أفقي</option><option>1:1 مربع</option></select></div></div><div class="row" style="margin-top:10px"><button class="primary" id="saveProject">حفظ المشروع</button><button id="cancelProject">إلغاء</button></div></div></section>
 <section id="writer" class="page">
@@ -77,6 +77,33 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid
 <p class="muted">يعرض هذا السجل التغييرات التي نُفذت داخل الاستوديو على هذا المتصفح. لا يعني إنشاء برومبت أن فيديو قد تم توليده، ولا يُسجل التوليد إلا إذا أعادت البوابة نتيجة ناجحة.</p>
 <p id="activityCount" class="muted" role="status" aria-live="polite"></p>
 <div id="activityList" class="stack"></div>
+</section>
+<section id="videoStudio" class="page">
+<h2>توليد الفيديو وربط Google Vids</h2>
+<p class="muted">مساران منفصلان: افتح Google Vids لصناعة الفيديو بأدوات Google المتاحة لحسابك، أو جهّز طلب توليد عبر API بعد ضبط مزود فعلي ومفتاح آمن.</p>
+<div class="grid">
+<div class="card stack">
+<h3>Google Vids</h3>
+<p>افتح استوديو Google الرسمي لإنشاء الفيديوهات وتحريرها. يتطلب إنشاء الفيديو من داخل Vids تسجيل الدخول وتوفر الميزة لحسابك.</p>
+<a href="https://vids.new" target="_blank" rel="noopener noreferrer" style="display:block;text-align:center;text-decoration:none;border-radius:10px;padding:12px;background:var(--accent);color:#151226;font-weight:700">فتح Google Vids ↗</a>
+<p class="muted">هذا الزر يفتح Vids في تبويب جديد. لا يعني وجود تكامل برمجي مباشر مع Vids.</p>
+</div>
+<div class="card stack">
+<h3>توليد من داخل NEXUS VIDEO</h3>
+<label for="videoPrompt">وصف المشهد</label>
+<textarea id="videoPrompt" placeholder="مثال: لقطة سينمائية واقعية في صحراء سعودية ليلًا، كاميرا تتقدم ببطء، غبار مضاء بضوء أحمر..." maxlength="12000"></textarea>
+<div class="grid">
+<div><label for="videoRatio">نسبة العرض</label><select id="videoRatio"><option value="9:16">9:16 عمودي</option><option value="16:9">16:9 أفقي</option><option value="1:1">1:1 مربع</option></select></div>
+<div><label for="videoDuration">المدة المطلوبة</label><select id="videoDuration"><option value="5">5 ثوانٍ</option><option value="8">8 ثوانٍ</option><option value="10">10 ثوانٍ</option></select></div>
+</div>
+<button class="primary" id="prepareVideoRequest">تجهيز طلب التوليد</button>
+<p id="videoStatus" class="muted" role="status" aria-live="polite">لم يتم توليد فيديو. نموذج Gemini Omni Flash لتوليد الفيديو عبر API يتطلب خطة مدفوعة بحسب تسعير Google المنشور؛ لا نرسل أي طلب مدفوع تلقائيًا.</p>
+<label for="videoRequestOutput">طلب جاهز للنسخ</label>
+<textarea id="videoRequestOutput" readonly placeholder="سيظهر هنا وصف منظم يمكنك نسخه إلى مزود التوليد المتاح لديك."></textarea>
+<div class="row"><button id="copyVideoRequest">نسخ الطلب</button><button id="openVidsFromStudio">فتح Google Vids</button></div>
+</div>
+</div>
+<div class="notice">الشفافية: تجهيز الطلب لا ينشئ ملف فيديو. التوليد المباشر داخل NEXUS يحتاج محرك API فعليًا، إعدادًا آمنًا، وتحققًا من التكلفة والحصة قبل تشغيله.</div>
 </section>
 <section id="engine" class="page"><h2>حالة المحركات</h2><div class="item"><h3>إدارة المشاريع والمشاهد</h3><span class="pill">متاح محليًا</span><p class="muted">الحفظ عبر localStorage في المتصفح الحالي.</p></div><div class="item"><h3>توليد الفيديو</h3><span class="pill">غير متصل</span><p class="muted">لا توجد واجهة API متصلة. يلزم اختيار مزود وتكوين الربط بشكل آمن.</p></div><div class="item"><h3>الصوت ومزامنة الشفاه</h3><span class="pill">غير متصل</span><p class="muted">غير متاحين في هذه النسخة.</p></div></section>
 </div></div><div class="footer">NEXUS Ω · NEXUS VIDEO 5.0 · نسخة تجريبية محلية. لا تضع مفاتيح API أو كلمات المرور داخل ملفات الواجهة.</div></main>
@@ -221,6 +248,20 @@ ${idea}
 - إذا كان الرد طويلًا، قسّمه إلى أجزاء مرقمة واطلب المتابعة بدل حذف التفاصيل.
 - ابدأ بملف التطوير، ثم الحلقة الأولى؛ لا تكتب جميع الحلقات كاملة في رد واحد.`;
 }
+$('prepareVideoRequest').onclick=()=>{
+ const prompt=$('videoPrompt').value.trim();
+ if(!prompt){$('videoStatus').textContent='اكتب وصف المشهد أولًا.';return}
+ const ratio=$('videoRatio').value,duration=$('videoDuration').value;
+ $('videoRequestOutput').value='Create a cinematic video clip.\nPrompt: '+prompt+'\nAspect ratio: '+ratio+'\nTarget duration: '+duration+' seconds.\nMaintain visual continuity, natural motion, coherent lighting, and avoid abrupt cuts.\nNote: duration and output settings depend on the selected provider.';
+ $('videoStatus').textContent='تم تجهيز نص الطلب فقط. لم يتم إرسال طلب إلى API ولم يتم توليد فيديو.';
+};
+$('copyVideoRequest').onclick=async()=>{
+ const value=$('videoRequestOutput').value;
+ if(!value){$('videoStatus').textContent='جهّز الطلب أولًا.';return}
+ try{await navigator.clipboard.writeText(value);$('videoStatus').textContent='تم نسخ الطلب إلى الحافظة.'}
+ catch(_){$('videoRequestOutput').focus();$('videoRequestOutput').select();$('videoStatus').textContent='حدّد النص وانسخه من قائمة المتصفح.'}
+};
+$('openVidsFromStudio').onclick=()=>window.open('https://vids.new','_blank','noopener,noreferrer');
 $('buildWriter').onclick=()=>{$('wOutput').value=buildWriterPrompt()};
 $('copyWriter').onclick=async()=>{const v=$('wOutput').value||buildWriterPrompt();if(!v)return;$('wOutput').value=v;try{await navigator.clipboard.writeText(v);alert('تم نسخ الطلب')}catch(_){$('wOutput').focus();$('wOutput').select();alert('حددت النص؛ انسخه من القائمة')}};
 $('downloadWriter').onclick=()=>{const v=$('wOutput').value||buildWriterPrompt();if(!v)return;$('wOutput').value=v;const blob=new Blob([v],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='NEXUS-series-development.txt';a.click();URL.revokeObjectURL(a.href)};
