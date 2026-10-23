@@ -1,0 +1,56 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import worker from "../src/index.js";
+
+const env = {
+  ALLOWED_ORIGINS: "https://alm911978-del.github.io",
+  TURNSTILE_HOSTNAME: "alm911978-del.github.io",
+  GEMINI_API_KEY: "fake-test-key",
+  TURNSTILE_SECRET_KEY: "fake-test-secret",
+  RATE_LIMITS: { get: async () => "0", put: async () => {} }
+};
+const req = (path, options = {}) => new Request("https://worker.example" + path, {
+  ...options,
+  headers: { Origin: "https://alm911978-del.github.io", ...(options.headers || {}) }
+});
+
+test("health reports service metadata without exposing secrets", async () => {
+  const res = await worker.fetch(req("/api/health"), env);
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.ok, true);
+  assert.equal(body.model, "gemini-3.8-flash");
+  assert.equal(JSON.stringify(body).includes("fake-test-key"), false);
+});
+
+test("rejects unapproved origin", async () => {
+  const res = await worker.fetch(new Request("https://worker.example/api/health", {
+    headers: { Origin: "https://evil.example" }
+  }), env);
+  assert.equal(res.status, 403);
+});
+
+test("rejects unsupported route", async () => {
+  const res = await worker.fetch(req("/unknown"), env);
+  assert.equal(res.status, 404);
+});
+
+test("rejects wrong content type before external calls", async () => {
+  const res = await worker.fetch(req("/api/generate", { method: "POST", body: "{}", headers: { "content-type": "text/plain" } }), env);
+  assert.equal(res.status, 415);
+});
+
+test("rejects malformed JSON", async () => {
+  const res = await worker.fetch(req("/api/generate", { method: "POST", body: "{", headers: { "content-type": "application/json" } }), env);
+  assert.equal(res.status, 400);
+});
+
+test("rejects unsupported action", async () => {
+  const res = await worker.fetch(req("/api/generate", { method: "POST", body: JSON.stringify({ action: "arbitrary", prompt: "test" }), headers: { "content-type": "application/json" } }), env);
+  assert.equal(res.status, 400);
+});
+
+test("fails closed if required secrets or rate-limit binding are missing", async () => {
+  const res = await worker.fetch(req("/api/generate", { method: "POST", body: JSON.stringify({ action: "series", prompt: "test" }), headers: { "content-type": "application/json" } }), { ALLOWED_ORIGINS: env.ALLOWED_ORIGINS });
+  assert.equal(res.status, 503);
+});
