@@ -9,4 +9,4 @@ TURNSTILE_HOSTNAME = "alm911978-del.github.io"
 
 [[kv_namespaces]]
 binding = "RATE_LIMITS"
-id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+id = "0e849e609c594155a490c17a94185ab9"
