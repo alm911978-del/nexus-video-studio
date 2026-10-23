@@ -24,3 +24,5 @@ jobs:
           node-version: 22
       - name: Run NEXUS unit tests
         run: npm run test:nexus
+      - name: Run Worker gateway security tests
+        run: npm test --prefix worker
