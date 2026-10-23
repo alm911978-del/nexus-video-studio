@@ -25,8 +25,11 @@ test("all static DOM IDs referenced by the main UI exist in the page", () => {
   assert.deepEqual(missing, []);
 });
 
-test("backup import is normalized before replacing saved data", () => {
+test("backup import is normalized and restores the included prompt lab draft", () => {
   assert.match(moduleSource, /const normalized\s*=\s*normalizeDatabase\(x\)/);
   assert.match(moduleSource, /db\s*=\s*normalized\.data/);
   assert.match(moduleSource, /schemaVersion:1/);
+  assert.match(moduleSource, /db\.promptLabDraft=draft/);
+  assert.match(moduleSource, /render\(\);restorePromptLabDraft\(\)/);
+  assert.match(moduleSource, /id="plSavedProject"/);
 });
