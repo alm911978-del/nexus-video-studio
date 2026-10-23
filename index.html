@@ -16,7 +16,7 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid
 <section id="projects" class="page active"><div class="row"><h2>مشاريعي</h2><button class="primary" id="newProject">＋ مشروع جديد</button></div><div id="projectList" class="grid"></div><div id="projectForm" class="card" hidden><h3>إنشاء مشروع</h3><label>اسم المشروع</label><input id="pName" placeholder="مثال: فارس الصحراء الأخير"><label>ملخص القصة</label><textarea id="pSummary" placeholder="اكتب فكرة الفيلم..."></textarea><div class="row"><div><label>الأسلوب</label><select id="pStyle"><option>سينمائي شبه واقعي</option><option>أنمي</option><option>وثائقي</option><option>خيال علمي</option></select></div><div><label>نسبة العرض</label><select id="pRatio"><option>9:16 عمودي</option><option>16:9 أفقي</option><option>1:1 مربع</option></select></div></div><div class="row" style="margin-top:10px"><button class="primary" id="saveProject">حفظ المشروع</button><button id="cancelProject">إلغاء</button></div></div></section>
 <section id="writer" class="page">
 <div class="row"><h2>كاتب المسلسلات الذكي</h2><span class="pill">مجاني · إعداد سيناريو</span></div>
-<p class="muted">جهّز ملفًا إبداعيًا متكاملًا لمسلسلك، ثم انسخ الطلب إلى نموذج ذكاء اصطناعي. هذه النسخة لا تتصل بـ Gemini مباشرةً ولا تدّعي توليدًا آليًا من داخل الموقع.</p>
+<p class="muted">اكتب فكرة المسلسل ثم أنشئ ملف التطوير محليًا، أو اربط بوابة Gemini الآمنة لتوليد النتيجة داخل الاستوديو. لا تضع مفتاح API في هذه الصفحة.</p>
 <div class="card stack">
 <label>فكرة المسلسل</label><textarea id="wIdea" placeholder="مثال: ظاهرة مستحيلة تظهر فوق مدينة سعودية وتغيّر حياة مجموعة من الناس..."></textarea>
 <div class="grid">
@@ -27,9 +27,18 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid
 </div>
 <label>المكان والبيئة</label><input id="wSetting" placeholder="مثال: أبها والرياض في السعودية، في الزمن الحاضر">
 <label>قيود أو أفكار إضافية</label><textarea id="wNotes" placeholder="الشخصيات، الفئة العمرية، أمور يجب تجنبها، نهاية مفضلة..."></textarea>
-<div class="row"><button class="primary" id="buildWriter">إنشاء ملف تطوير المسلسل</button><button id="copyWriter">نسخ الطلب</button><button id="downloadWriter">تصدير TXT</button></div>
+<div class="row"><button class="primary" id="buildWriter">إنشاء ملف تطوير المسلسل</button><button class="primary" id="generateGemini">توليد بالذكاء الاصطناعي</button><button id="copyWriter">نسخ النتيجة</button><button id="downloadWriter">تصدير TXT</button></div>
+<details class="card" style="margin-top:12px"><summary>إعداد اتصال Gemini الآمن</summary>
+<p class="muted">أدخل رابط Cloudflare Worker بعد نشره، ومفتاح الموقع العام لـ Turnstile. لا تدخل المفتاح السري هنا؛ يُحفظ فقط في Cloudflare Secrets.</p>
+<label>رابط بوابة Gemini (Worker URL)</label><input id="geminiEndpoint" type="url" placeholder="https://nexus-gemini-gateway.اسمك.workers.dev">
+<label>Turnstile Site Key (مفتاح الموقع العام)</label><input id="turnstileSiteKey" placeholder="0x4AAAA...">
+<div class="row"><button id="saveGeminiSettings">حفظ الإعدادات</button><button id="checkGeminiGateway">اختبار اتصال البوابة</button></div>
+<div id="turnstileWidget" style="margin-top:12px"></div>
+<p id="geminiStatus" class="muted" role="status" aria-live="polite">البوابة غير مضبوطة بعد. راجع مجلد worker في المستودع.</p>
+<label>نوع المهمة</label><select id="geminiAction"><option value="series">تطوير مسلسل كامل</option><option value="episode">كتابة حلقة</option><option value="continuity">تدقيق الاستمرارية</option><option value="scene-prompt">صياغة Prompt لمشهد</option></select>
+</details>
 <label>ملف التطوير / الطلب الجاهز</label><textarea id="wOutput" style="min-height:300px" placeholder="سيظهر هنا طلب احترافي متكامل لتطوير المسلسل..." readonly></textarea>
-<p class="muted">ميزة اتساق الشخصيات: اطلب من النموذج إنشاء «دليل استمرارية» ثابت، ثم أعد استخدامه عند كتابة كل حلقة ومشهد. راجع النتائج قبل اعتمادها.</p>
+<p class="muted">الحماية: مفتاح Gemini يبقى في Cloudflare، مع تحقق Turnstile وحدّ يومي حسب عنوان IP وفحص مدخلات الطلب. إعداد البوابة ونشرها مطلوبان مرة واحدة قبل أول توليد.</p>
 </div>
 </section>
 <section id="characters" class="page"><div class="row"><h2>ذاكرة الشخصيات</h2><button class="primary" id="newCharacter">＋ شخصية</button></div><div id="characterForm" class="card" hidden><label>اسم الشخصية</label><input id="cName" placeholder="اسم الشخصية"><label>الوصف الثابت (الوجه، الشعر، الملابس، العمر)</label><textarea id="cDesc" placeholder="اكتب السمات التي يجب الحفاظ عليها بين المشاهد"></textarea><div class="row"><button class="primary" id="saveCharacter">حفظ الشخصية</button><button id="cancelCharacter">إلغاء</button></div></div><div id="characterList" class="grid"></div></section>
@@ -37,6 +46,7 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid
 <section id="backup" class="page"><h2>النسخ الاحتياطي</h2><p class="muted">صدّر بياناتك قبل تغيير المتصفح أو الجهاز. لا تُرسل بياناتك إلى خادم.</p><div class="row"><button class="primary" id="exportData">تصدير JSON</button><button id="importButton">استيراد JSON</button><input id="importFile" type="file" accept=".json,application/json" hidden></div><pre id="backupStatus" class="muted"></pre></section>
 <section id="engine" class="page"><h2>حالة المحركات</h2><div class="item"><h3>إدارة المشاريع والمشاهد</h3><span class="pill">متاح محليًا</span><p class="muted">الحفظ عبر localStorage في المتصفح الحالي.</p></div><div class="item"><h3>توليد الفيديو</h3><span class="pill">غير متصل</span><p class="muted">لا توجد واجهة API متصلة. يلزم اختيار مزود وتكوين الربط بشكل آمن.</p></div><div class="item"><h3>الصوت ومزامنة الشفاه</h3><span class="pill">غير متصل</span><p class="muted">غير متاحين في هذه النسخة.</p></div></section>
 </div></div><div class="footer">NEXUS Ω · نسخة تجريبية 0.1 · لا تضع مفاتيح API أو كلمات المرور داخل ملفات الواجهة.</div></main>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 <script>
 const KEY='nexus-video-50-data', LEGACY_KEY='nexus-video-57-data';
 const emptyDB=()=>({projects:[],characters:[],scenes:[]});
@@ -120,5 +130,68 @@ ${idea}
 $('buildWriter').onclick=()=>{$('wOutput').value=buildWriterPrompt()};
 $('copyWriter').onclick=async()=>{const v=$('wOutput').value||buildWriterPrompt();if(!v)return;$('wOutput').value=v;try{await navigator.clipboard.writeText(v);alert('تم نسخ الطلب')}catch(_){$('wOutput').focus();$('wOutput').select();alert('حددت النص؛ انسخه من القائمة')}};
 $('downloadWriter').onclick=()=>{const v=$('wOutput').value||buildWriterPrompt();if(!v)return;$('wOutput').value=v;const blob=new Blob([v],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='NEXUS-series-development.txt';a.click();URL.revokeObjectURL(a.href)};
+
+const GEMINI_SETTINGS_KEY='nexus-gemini-settings-v1';
+let geminiSettings={endpoint:'',siteKey:''},turnstileToken='',turnstileWidgetId=null,turnstileScriptRequested=false;
+try{geminiSettings={...geminiSettings,...JSON.parse(localStorage.getItem(GEMINI_SETTINGS_KEY)||'{}')}}catch(_){}
+function setGeminiStatus(message,isError=false){const el=$('geminiStatus');if(el){el.textContent=message;el.style.color=isError?'#b91c1c':''}}
+function normalizeEndpoint(value){return String(value||'').trim().replace(/\/+$/,'')}
+function saveGeminiSettings(){
+ const endpoint=normalizeEndpoint($('geminiEndpoint').value),siteKey=$('turnstileSiteKey').value.trim();
+ if(endpoint){try{const u=new URL(endpoint);if(u.protocol!=='https:')throw Error()}catch(_){setGeminiStatus('أدخل رابط HTTPS صحيحًا لبوابة Worker.',true);return false}}
+ geminiSettings={endpoint,siteKey};try{localStorage.setItem(GEMINI_SETTINGS_KEY,JSON.stringify(geminiSettings))}catch(_){}
+ turnstileToken='';turnstileWidgetId=null;$('turnstileWidget').innerHTML='';
+ if(siteKey)renderTurnstileWidget();
+ setGeminiStatus('تم حفظ إعدادات الاتصال محليًا. لم يتم حفظ أي مفتاح سري هنا.');
+ return true;
+}
+function loadTurnstileScript(){
+ if(window.turnstile)return true;
+ if(turnstileScriptRequested)return false;
+ turnstileScriptRequested=true;
+ const script=document.createElement('script');script.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';script.async=true;script.defer=true;
+ script.onerror=()=>setGeminiStatus('تعذر تحميل Turnstile. تحقق من الاتصال بالإنترنت.',true);
+ document.head.appendChild(script);return false;
+}
+function renderTurnstileWidget(){
+ if(!geminiSettings.siteKey){setGeminiStatus('أدخل Turnstile Site Key العام ثم احفظ الإعدادات.',true);return}
+ if(!window.turnstile){loadTurnstileScript();setGeminiStatus('جارٍ تحميل فحص الأمان؛ انتظر لحظات ثم اضغط حفظ الإعدادات مجددًا.');return}
+ const target=$('turnstileWidget');if(!target)return;
+ try{
+  turnstileToken='';target.innerHTML='';
+  turnstileWidgetId=window.turnstile.render(target,{sitekey:geminiSettings.siteKey,callback:t=>{turnstileToken=t;setGeminiStatus('اجتاز فحص الأمان. يمكنك الآن طلب التوليد.')},'expired-callback':()=>{turnstileToken='';setGeminiStatus('انتهت صلاحية فحص الأمان. أكمل الفحص مرة أخرى.',true)},'error-callback':()=>{turnstileToken='';setGeminiStatus('تعذر إكمال فحص الأمان. أعد المحاولة.',true)},theme:'auto'});
+ }catch(_){setGeminiStatus('تعذر إنشاء فحص الأمان. تحقق من Site Key والنطاق المسجل في Turnstile.',true)}
+}
+$('geminiEndpoint').value=geminiSettings.endpoint||'';
+$('turnstileSiteKey').value=geminiSettings.siteKey||'';
+$('saveGeminiSettings').onclick=()=>saveGeminiSettings();
+$('checkGeminiGateway').onclick=async()=>{
+ if(!saveGeminiSettings()||!geminiSettings.endpoint){setGeminiStatus('أدخل رابط Worker صحيحًا واحفظ الإعدادات أولًا.',true);return}
+ setGeminiStatus('جارٍ فحص البوابة...');
+ try{const res=await fetch(geminiSettings.endpoint+'/api/health',{headers:{'accept':'application/json'}});const data=await res.json();if(!res.ok||!data.ok)throw Error(data.error||'تعذر الاتصال');setGeminiStatus('الاتصال ناجح: '+data.service+' · النموذج '+data.model+' · فحص الأمان مطلوب قبل التوليد.')}
+ catch(e){setGeminiStatus('فشل الاتصال. تأكد من نشر Worker وضبط ALLOWED_ORIGINS واسم النطاق. '+(e.message||''),true)}
+};
+$('generateGemini').onclick=async()=>{
+ if(!geminiSettings.endpoint||!geminiSettings.siteKey){setGeminiStatus('أكمل إعداد رابط Worker وTurnstile أولًا.',true);return}
+ if(!turnstileToken){if(!window.turnstile)renderTurnstileWidget();setGeminiStatus('أكمل فحص Turnstile ثم اضغط توليد بالذكاء الاصطناعي.',true);return}
+ let prompt='',action=$('geminiAction').value;
+ if(action==='series')prompt=buildWriterPrompt();
+ else if(action==='episode')prompt='اكتب الحلقة التالية بناءً على هذه المعلومات، مع مشاهد مرقمة وحوار واتساق الشخصيات. إذا كانت المعلومات ناقصة فاذكر الافتراضات بوضوح.\n\n'+($('wOutput').value.trim()||buildWriterPrompt());
+ else if(action==='continuity')prompt='دقّق هذا المحتوى بحثًا عن تناقضات الشخصيات والزمن والمكان والأدوات. قدّم جدولًا للحقائق المؤكدة والتناقضات والمعلومات الناقصة والإصلاحات المقترحة. لا تخترع حقائق.\n\n'+($('wOutput').value.trim()||$('wIdea').value.trim());
+ else if(action==='scene-prompt')prompt='حوّل المعلومات التالية إلى Prompt سينمائي واضح بالإنجليزية، مع الحفاظ على هوية الشخصية والملابس والإضاءة والموقع. أضف الحركة والكاميرا والصوت وتجنب التغييرات غير المقصودة.\n\n'+($('wOutput').value.trim()||$('wIdea').value.trim());
+ if(!prompt||!prompt.trim())return;
+ const button=$('generateGemini');button.disabled=true;button.textContent='جارٍ التوليد…';setGeminiStatus('يرسل الطلب إلى Gemini عبر البوابة الآمنة…');
+ try{
+  const res=await fetch(geminiSettings.endpoint+'/api/generate',{method:'POST',headers:{'content-type':'application/json','accept':'application/json'},body:JSON.stringify({action,prompt,turnstileToken})});
+  const data=await res.json();
+  if(!res.ok||!data.ok)throw Error(data.error||('HTTP '+res.status));
+  $('wOutput').value=data.text;
+  setGeminiStatus('نجح التوليد باستخدام '+data.model+(data.usage?' · اكتمل الطلب':'')+'. انسخ النتيجة أو صدّرها وراجعها قبل الاعتماد.');
+  try{window.turnstile?.reset(turnstileWidgetId)}catch(_){}turnstileToken='';
+ }catch(e){setGeminiStatus('تعذر التوليد: '+(e.message||'خطأ غير معروف')+'. افحص إعدادات Worker والحصة المجانية ثم أعد فحص Turnstile.',true)}
+ finally{button.disabled=false;button.textContent='توليد بالذكاء الاصطناعي'}
+};
+if(geminiSettings.siteKey){if(window.turnstile)renderTurnstileWidget();else loadTurnstileScript()}
+
 render();
 </script></body></html>
