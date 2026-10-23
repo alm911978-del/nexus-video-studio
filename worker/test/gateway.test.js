@@ -1,6 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import worker from "../src/index.js";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { Script } from "node:vm";
 
 const env = {
   ALLOWED_ORIGINS: "https://alm911978-del.github.io",
@@ -53,4 +56,18 @@ test("rejects unsupported action", async () => {
 test("fails closed if required secrets or rate-limit binding are missing", async () => {
   const res = await worker.fetch(req("/api/generate", { method: "POST", body: JSON.stringify({ action: "series", prompt: "test" }), headers: { "content-type": "application/json" } }), { ALLOWED_ORIGINS: env.ALLOWED_ORIGINS });
   assert.equal(res.status, 503);
+});
+
+test("published HTML inline JavaScript parses and includes secure Gemini controls", () => {
+  const htmlPath = fileURLToPath(new URL("../../index.html", import.meta.url));
+  const html = readFileSync(htmlPath, "utf8");
+  const inlineScripts = [...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)]
+    .map(match => match[1])
+    .filter(source => source.trim());
+  assert.ok(inlineScripts.length > 0, "expected an inline application script");
+  for (const source of inlineScripts) new Script(source);
+  assert.match(html, /id="generateGemini"/);
+  assert.match(html, /id="turnstileWidget"/);
+  assert.match(html, /api\\/generate/);
+  assert.doesNotMatch(html, /\\bAIza[0-9A-Za-z_-]{35}\\b/, "do not embed a Google API key in public HTML");
 });
