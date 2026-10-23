@@ -28,8 +28,8 @@ def test_generate_fails_honestly_without_provider():
     assert response.json()["detail"]["code"] == "VIDEO_ENGINE_NOT_CONFIGURED"
 
 
-def test_audio_mux_validates_video_extension_before_ffmpeg(tmp_path, monkeypatch):
-    # The extension validation occurs before processing or invoking FFmpeg.
+def test_audio_mux_reports_missing_ffmpeg(tmp_path, monkeypatch):
+    # Missing runtime dependency must be reported explicitly.
     monkeypatch.setenv("FFMPEG_PATH", str(tmp_path / "nonexistent-ffmpeg"))
     response = client.post(
         "/api/v1/audio/mux",
