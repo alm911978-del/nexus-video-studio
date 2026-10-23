@@ -13,6 +13,7 @@
 - Provide clear failure messages without exposing stack traces or secret configuration.
 - Ask permission before uploading user media to an external provider; explain the provider's terms and retention where known.
 - Provide export and deletion paths for user project data.
+- Keep activity history bounded, transparent about which actions it records, and exportable/deletable by the user.
 - LocalStorage is browser-local and is not encrypted cloud storage. Users should keep backups private and avoid storing secrets in project descriptions or prompts.
 - Review dependency updates and pin major runtime/tool versions in CI.
 - Run security review before connecting a new provider or enabling account/cloud features.
