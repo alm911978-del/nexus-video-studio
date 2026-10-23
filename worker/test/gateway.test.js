@@ -99,6 +99,43 @@ test("rejects oversized generation payloads", async () => {
   assert.equal(res.status, 413);
 });
 
+test("accepts scene-prompt action and returns Gemini text only after Turnstile succeeds", async () => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async (url, options = {}) => {
+    calls += 1;
+    if (String(url).includes("challenges.cloudflare.com/turnstile/v0/siteverify")) {
+      return new Response(JSON.stringify({ success: true, hostname: "alm911978-del.github.io" }), {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      });
+    }
+    assert.match(String(url), /generativelanguage\.googleapis\.com/);
+    assert.match(String(url), /gemini-3\.8-flash:generateContent/);
+    const sent = JSON.parse(options.body);
+    assert.match(sent.systemInstruction.parts[0].text, /Prompt سینمائي عملي/);
+    return new Response(JSON.stringify({
+      candidates: [{ content: { parts: [{ text: "A cinematic scene prompt." }] } }],
+      usageMetadata: { totalTokenCount: 20 }
+    }), { status: 200, headers: { "content-type": "application/json" } });
+  };
+  try {
+    const res = await worker.fetch(req("/api/generate", {
+      method: "POST",
+      body: JSON.stringify({ action: "scene-prompt", prompt: "A young man enters an Arabian desert.", turnstileToken: "valid-token" }),
+      headers: { "content-type": "application/json" }
+    }), env);
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.ok, true);
+    assert.equal(body.text, "A cinematic scene prompt.");
+    assert.equal(body.model, "gemini-3.8-flash");
+    assert.equal(calls, 2);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("enforces daily IP rate limit after successful Turnstile verification", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => new Response(JSON.stringify({ success: true, hostname: "alm911978-del.github.io" }), {
