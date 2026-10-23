@@ -67,10 +67,10 @@ test("published HTML inline JavaScript parses and includes secure Gemini control
   assert.ok(inlineScripts.length > 0, "expected an inline application script");
   for (const source of inlineScripts) {
     // The browser entrypoint is a module; strip its static import for Node's classic Script parser.
-    const parseableSource = source.replace(/^\\s*import\\s+\\{[^}]+\\}\\s+from\\s+["'][^"']+["'];\\s*/m, "");
+    const parseableSource = source.replace(/^\s*import\s+\{[^}]+\}\s+from\s+["'][^"']+["'];\s*/m, "");
     new Script(parseableSource);
   }
-  assert.match(html, /import \\{ normalizeDatabase \\} from ["']\\.\\/src\\/nexus\\/backup-schema\\.js["']/);
+  assert.match(html, /import \{ normalizeDatabase \} from ["']\.\/src\/nexus\/backup-schema\.js["']/);
   const backupSchemaPath = fileURLToPath(new URL("../../src/nexus/backup-schema.js", import.meta.url));
   assert.doesNotThrow(() => readFileSync(backupSchemaPath, "utf8"));
   assert.match(html, /id="generateGemini"/);
