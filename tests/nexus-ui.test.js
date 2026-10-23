@@ -54,5 +54,5 @@ test("local activity page exposes export and clear actions and logs only explici
   assert.match(moduleSource, /recordActivity\(wasEditing\?'scene-edited'/);
   assert.match(moduleSource, /recordActivity\('backup-imported'/);
   assert.match(moduleSource, /recordActivity\('ai-text-generated'/);
-  assert.match(moduleSource, /توليد الفيديو.*غير موصولة/);
+  assert.match(html, /توليد الفيديو.*غير موصولة/);
 });
