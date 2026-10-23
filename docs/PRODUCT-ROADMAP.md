@@ -17,10 +17,10 @@ A transparent, provider-neutral workspace for planning cinematic scenes and orch
 - [x] Connect saved character descriptions and saved projects to the prompt lab.
 - [x] Associate prompt-lab scenes with their selected project and character.
 - [x] Keep prompt-lab drafts in local browser storage.
-- [x] Add schema-versioned JSON backup export and validated import.
+- [x] Add schema-versioned JSON backup export and validated import, including the prompt-lab draft.
+- [x] Add a searchable scene library and edit-in-place flow.
 - [x] Bound imported record counts and text lengths; replace unsafe/duplicate IDs; detach orphan scene references.
 - [x] Add UI smoke tests for JavaScript syntax, duplicate HTML IDs and missing static DOM targets.
-- [ ] Add a searchable scene library and edit-in-place flows.
 - [ ] Add local job history with timestamps, provider, status and verified output references.
 - [ ] Add accessibility and mobile browser regression checks.
 - [ ] Never put provider API keys in client-side HTML or JavaScript.
