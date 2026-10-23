@@ -40,7 +40,25 @@ test("media pipeline only reports completed after adapter returns an asset", asy
   assert.equal(result.ok, true);
   assert.equal(result.providerId, "mock");
   const badProviders = [{id:"mock-bad", enabled:true, capabilities:["image-to-video"], adapter:async()=>({status:"completed"})}];
-  assert.equal((await runMediaJob({mode:"image-to-video", providers:badProviders, input:{prompt:"scene"}})).status, "provider-did-not-return-verified-asset");
+  assert.equal((await runMediaJob({mode:"image-to-video", providers:badProviders, input:{prompt:"scene"}})).status, "provider-returned-invalid-asset-url");
+});
+
+test("media completion status is separated from remote-file verification", async () => {
+  const providers = [{
+    id: "reported-complete-provider",
+    enabled: true,
+    capabilities: ["image-to-video"],
+    adapter: async () => ({ status: "completed", assetUrl: "https://example.test/video.mp4" })
+  }];
+  const result = await runMediaJob({ mode: "image-to-video", providers, input: { prompt: "scene" } });
+  assert.equal(result.ok, true);
+  assert.match(result.completionNote, /not independently verified/);
+  const pendingProviders = [{
+    ...providers[0],
+    adapter: async () => ({ status: "running", assetUrl: "https://example.test/video.mp4" })
+  }];
+  const pending = await runMediaJob({ mode: "image-to-video", providers: pendingProviders, input: { prompt: "scene" } });
+  assert.equal(pending.status, "provider-not-completed");
 });
 
 test("media pipeline rejects insecure, malformed and credential-bearing asset URLs", async () => {
@@ -65,7 +83,7 @@ test("media pipeline rejects insecure, malformed and credential-bearing asset UR
       input: { prompt: "cinematic scene" }
     });
     assert.equal(result.ok, false, "Should reject asset URL: " + assetUrl);
-    assert.equal(result.status, "provider-did-not-return-verified-asset");
+    assert.equal(result.status, "provider-returned-invalid-asset-url");
   }
 });
 
