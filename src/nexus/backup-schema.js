@@ -2,6 +2,7 @@ const LIMITS = Object.freeze({
   projects: 500,
   characters: 1000,
   scenes: 5000,
+  activity: 200,
   id: 100,
   name: 240,
   summary: 6000,
@@ -18,6 +19,11 @@ const PROMPT_TEXT_FIELDS = [
   "plAction", "plWorld", "plCamera", "plLanguage", "plOutput"
 ];
 const PROMPT_TEMPLATES = new Set(["cinematic", "image", "dialogue"]);
+const ACTIVITY_TYPES = new Set([
+  "project-created", "project-deleted", "character-created", "character-deleted",
+  "scene-created", "scene-edited", "scene-deleted", "prompt-generated", "prompt-copied",
+  "backup-exported", "backup-imported", "activity-exported", "ai-text-generated"
+]);
 
 function cleanText(value, maxLength) {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
@@ -173,9 +179,36 @@ export function normalizeDatabase(input, { idFactory = defaultIdFactory } = {}) 
     }
   }
 
+  let rawActivity = [];
+  if (input.activity !== undefined) {
+    if (!Array.isArray(input.activity)) {
+      warnings.push("تم تجاهل سجل نشاط غير صالح.");
+    } else {
+      if (input.activity.length > LIMITS.activity) warnings.push("تم الاحتفاظ بآخر " + LIMITS.activity + " عملية فقط.");
+      rawActivity = input.activity.slice(-LIMITS.activity).filter(record => {
+        const valid = Boolean(record && typeof record === "object" && !Array.isArray(record));
+        if (!valid) warnings.push("تم تجاهل عملية نشاط غير صالحة.");
+        return valid;
+      });
+    }
+  }
+
+  const activity = rawActivity.flatMap(record => {
+    const type = cleanText(record.type, 80);
+    const title = cleanText(record.title, 200);
+    const detail = cleanText(record.detail, 800);
+    const timestamp = typeof record.at === "string" ? Date.parse(record.at) : NaN;
+    if (!ACTIVITY_TYPES.has(type) || !title || !Number.isFinite(timestamp)) {
+      warnings.push("تم تجاهل عملية نشاط ينقصها النوع أو العنوان أو الوقت الصحيح.");
+      return [];
+    }
+    const activityId = createSafeId(typeof record.id === "string" ? record.id : "", usedIds, idFactory);
+    return [{ id: activityId, type, title, detail, at: new Date(timestamp).toISOString() }];
+  }).sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
+
   return {
     ok: true,
-    data: { projects, characters, scenes, promptLabDraft },
+    data: { projects, characters, scenes, promptLabDraft, activity },
     warnings: [...new Set(warnings)]
   };
 }
