@@ -8,6 +8,18 @@ function cleanText(value, max) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
 
+function isSafeAssetUrl(value) {
+  if (typeof value !== "string") return false;
+  const candidate = value.trim();
+  if (!candidate || /[\\u0000-\\u001F\\u007F]/.test(candidate)) return false;
+  try {
+    const url = new URL(candidate);
+    return url.protocol === "https:" && Boolean(url.hostname) && !url.username && !url.password;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Dispatches a job to an explicitly configured provider adapter.
  * Returns truthful status metadata; does not fake a media URL or claim quality.
@@ -44,19 +56,19 @@ export async function runMediaJob({ mode, providers, input = {}, onProgress = ()
   try {
     onProgress({ status: "submitted", providerId: selected.provider.id });
     const result = await selected.provider.adapter({ mode, input: payload, onProgress });
-    if (!result || result.status !== "completed" || typeof result.assetUrl !== "string" || !result.assetUrl.trim()) {
+    if (!result || result.status !== "completed" || !isSafeAssetUrl(result.assetUrl)) {
       return {
         ok: false,
         status: "provider-did-not-return-verified-asset",
         providerId: selected.provider.id,
-        detail: "The adapter did not return a completed result with an asset URL."
+        detail: "The adapter did not return a completed result with an absolute HTTPS asset URL without embedded credentials. URL validation does not verify the remote file contents."
       };
     }
     return {
       ok: true,
       status: "completed",
       providerId: selected.provider.id,
-      assetUrl: result.assetUrl,
+      assetUrl: result.assetUrl.trim(),
       mediaType: typeof result.mediaType === "string" ? result.mediaType : "unknown",
       qualityNote: "Requested quality is not a guarantee; verify the returned asset and provider metadata."
     };
