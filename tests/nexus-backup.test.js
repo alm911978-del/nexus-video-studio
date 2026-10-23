@@ -78,6 +78,42 @@ test("invalid records and orphan associations are safely discarded", () => {
   assert.ok(result.warnings.length >= 3);
 });
 
+test("prompt lab draft is included in backups and retains valid project/character links", () => {
+  const source = validBackup();
+  source.promptLabDraft = {
+    plSavedProject: "project_1",
+    plSavedCharacter: "character_1",
+    plName: "كايل",
+    plTemplate: "dialogue",
+    plOutput: "جهّز حوارًا سينمائيًا"
+  };
+  const result = normalizeDatabase(source);
+  assert.equal(result.ok, true);
+  assert.equal(result.data.promptLabDraft.plSavedProject, "project_1");
+  assert.equal(result.data.promptLabDraft.plSavedCharacter, "character_1");
+  assert.equal(result.data.promptLabDraft.plTemplate, "dialogue");
+  assert.equal(result.data.promptLabDraft.plOutput, "جهّز حوارًا سينمائيًا");
+});
+
+test("prompt lab draft rejects orphan links and bounds untrusted fields", () => {
+  const source = validBackup();
+  source.promptLabDraft = {
+    plSavedProject: "missing",
+    plSavedCharacter: "missing",
+    plTemplate: "attacker-template",
+    plOutput: "x".repeat(50000),
+    secret: "must be dropped"
+  };
+  const result = normalizeDatabase(source);
+  assert.equal(result.ok, true);
+  assert.equal(result.data.promptLabDraft.plSavedProject, "");
+  assert.equal(result.data.promptLabDraft.plSavedCharacter, "");
+  assert.equal(result.data.promptLabDraft.plTemplate, "cinematic");
+  assert.equal(result.data.promptLabDraft.plOutput.length, 12000);
+  assert.equal("secret" in result.data.promptLabDraft, false);
+  assert.ok(result.warnings.length >= 3);
+});
+
 test("large text and unsupported aspect ratios are bounded and normalized", () => {
   const source = validBackup();
   source.projects[0].summary = "x".repeat(100000);
