@@ -20,6 +20,12 @@ test("router chooses the enabled capable provider with highest priority", () => 
   assert.equal(selectProvider({ providerCapability: "text" }, [a, b]).provider.id, "first");
 });
 
+test("router honors an explicit zero provider priority", () => {
+  const standard = { id: "standard", enabled: true, capabilities: ["text"], priority: 1, run() {} };
+  const top = { id: "top", enabled: true, capabilities: ["text"], priority: 0, run() {} };
+  assert.equal(selectProvider({ providerCapability: "text" }, [standard, top]).provider.id, "top");
+});
+
 test("project context only accepts strings and is bounded", () => {
   const context = buildProjectContext({ facts: [" Kael ", 4, ""], notes: ["x".repeat(13000)] });
   assert.deepEqual(context.facts, ["Kael"]);
