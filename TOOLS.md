@@ -21,9 +21,10 @@ This file tracks real integration status. A tool is **not connected** just becau
 
 ## Verification record
 
-- **2026-10-24 — GitHub Actions:** the `NEXUS Worker Tests` workflow passed on commit `93194e85387fcbb95c7429c0c2512d4f665dc360`. The workflow ran `npm test` using Node.js 20 and the current test suite, including source-level checks for the media lab and SRT controls.
-- This confirms the automated test suite passed. It does **not** prove that every media codec works in every browser, that the deployed Gemini Worker is configured, or that real Gemini generation works end-to-end.
-- GitHub Pages deployment workflow also reported success for that commit. This verifies the Pages build/deployment job, not every interactive feature in a live browser.
+- **2026-10-24 — GitHub Actions:** `NEXUS Worker Tests` passed on commit `8158e4ddb0f354c47e821556c75e761139c40949` (run: https://github.com/alm911978-del/nexus-video-studio/actions/runs/40049125035). The workflow ran `npm test` using Node.js 20.
+- The suite checks the media lab/SRT controls, validates backup-import safeguards and escaped record IDs, and mocks a successful Gemini 3.8 request to verify the request payload and response handling.
+- The mocked test confirms the gateway code path and request shape, **not** a live Gemini API call or a deployed Cloudflare Worker. The Gemini integration still requires deployment, correct secrets/bindings, and a real end-to-end smoke test.
+- GitHub Pages deployment had succeeded on the previous commit; the latest Pages deployment for the security fixes was still running at the time of this update. A successful Pages build does not prove every interactive feature works in a live browser.
 
 ## Safety and cost principles
 
