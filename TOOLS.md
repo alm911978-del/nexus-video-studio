@@ -5,7 +5,7 @@ This file tracks real integration status. A tool is **not connected** just becau
 ## Current repository state
 
 - Static front end: `index.html`, compatible with GitHub Pages.
-- Gemini text gateway: source exists under `worker/`; it still requires deployment and secrets before it can work from the website.
+- Multi-provider LLM text gateway: source exists under `worker/` for Gemini, Groq, OpenRouter, and Mistral; it still requires Cloudflare deployment, KV/Turnstile configuration, and the selected provider's secret before live generation works from the website.
 - Video generation: no working video-generation API integration is present in the front end.
 - AI speech generation and lip-sync: no working integration is present in the front end.
 - Local media lab and SRT builder: implemented in the browser; automated CI checks passed on 2026-10-24. Manual browser testing across real media files remains outstanding.
@@ -22,6 +22,7 @@ This file tracks real integration status. A tool is **not connected** just becau
 ## Verification record
 
 - **2026-10-24 — GitHub Actions:** `NEXUS Worker Tests` passed on commit `f45e8eab0ca75fb00b3b8826500d97862b603c7a` (run: https://github.com/alm911978-del/nexus-video-studio/actions/runs/40051308947). The workflow ran `npm test` using Node.js 20.
+- **2026-10-24 — LLM provider routing:** added allowlisted Gemini, Groq, OpenRouter, and Mistral options through PR #7 (merged as `10a996e10f02e4b6045cbd90aaff7959fc35b8d1`). The PR's automated Worker/UI test run passed (https://github.com/alm911978-del/nexus-video-studio/actions/runs/40120135137). The main-branch test and GitHub Pages deployment were still running at the time of this registry update. No provider API call or Cloudflare deployment was performed.
 - The suite checks the media lab/SRT controls, backup-import safeguards, escaped record IDs, consistent prototype-version labels, and a mocked successful Gemini 3.8 request.
 - **2026-10-24 — Published-site browser smoke test:** confirmed the live page title is `NEXUS VIDEO 5.0 — الاستوديو`, the footer shows prototype `0.3`, the local series-development template generated non-empty output, and two Arabic subtitle lines produced valid sequential SRT timestamps. No real media file was uploaded and no Gemini request was sent.
 - **2026-10-24 — GitHub Pages:** latest deployment completed successfully for commit `f45e8eab0ca75fb00b3b8826500d97862b603c7a` (run: https://github.com/alm911978-del/nexus-video-studio/actions/runs/40051308735).
@@ -40,7 +41,7 @@ This file tracks real integration status. A tool is **not connected** just becau
 
 | Priority | Group | Intended capability | Approach | Status |
 |---|---|---|---|---|
-| P0 | Gemini text | Script development, scene prompts, continuity checks | Existing Cloudflare Worker gateway | source_present_needs_setup |
+| P0 | LLM text providers | Script development, scene prompts, continuity checks, general chat | Cloudflare Worker with an allowlist for Gemini, Groq, OpenRouter, and Mistral | source_present_needs_setup |
 | P1 | Local media lab | Preview image/video/audio and inspect basic metadata without uploading files | Browser object URLs and built-in media metadata | unit_tested_needs_end_to_end |
 | P1 | Subtitles | Create and export SRT from user-supplied caption lines | Browser utility; fixed duration per caption, no speech recognition | unit_tested_needs_end_to_end |
 | P1 | Image generation | Create reference frames and concept art | Select a provider only after checking genuine no-cost access and API availability | planned |
@@ -60,7 +61,7 @@ This file tracks real integration status. A tool is **not connected** just becau
 ## Recommended implementation order
 
 1. Manually test the local media lab and SRT builder in the published site using representative image, video, and audio files.
-2. Complete deployment and real testing of the existing Gemini gateway.
+2. Deploy the multi-provider text gateway, configure Turnstile/KV and one provider secret, then verify a real end-to-end text request.
 3. Add one image-generation provider and test a real request.
 4. Add one video-generation provider and test a real short clip.
 5. Add Arabic TTS, then speech recognition and lip-sync only if genuinely available at no cost.
