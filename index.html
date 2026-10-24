@@ -52,6 +52,31 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid
 <div class="row"><button class="primary" id="exportMediaReport">تصدير تقرير الوسائط JSON</button><button id="clearMedia">مسح الملفات من المختبر</button></div>
 <div id="mediaResults" class="grid"></div>
 </div>
+<div class="card stack" style="margin-top:14px" id="scenePackLab">
+<h3>مختبر المشهد متعدد الوسائط</h3>
+<p class="muted">جهّز مشهدًا يجمع صورة مرجعية وصوتًا مرجعيًا وبرومبت وإعدادات سينمائية. تعمل المعاينة وتجميع البرومبت محليًا في المتصفح؛ لا تُرفع الملفات ولا يتم توليد فيديو تلقائيًا.</p>
+<div class="grid">
+ <div><label for="sceneRefImages">صور مرجعية للشخصية أو المكان</label><input id="sceneRefImages" type="file" accept="image/*" multiple><div id="sceneImagePreviews" class="grid" style="margin-top:8px"></div></div>
+ <div><label for="sceneRefAudio">صوت مرجعي (اختياري)</label><input id="sceneRefAudio" type="file" accept="audio/*"><div id="sceneAudioPreview" style="margin-top:8px"></div></div>
+</div>
+<div class="grid">
+ <div><label for="scenePackTitle">اسم المشهد</label><input id="scenePackTitle" maxlength="120" placeholder="مثال: ظهور الظاهرة فوق الصحراء"></div>
+ <div><label for="scenePackDuration">المدة المستهدفة (ثانية)</label><input id="scenePackDuration" type="number" min="1" max="120" value="8"></div>
+ <div><label for="scenePackRatio">نسبة الأبعاد</label><select id="scenePackRatio"><option value="9:16">9:16 — عمودي</option><option value="16:9">16:9 — أفقي</option><option value="1:1">1:1 — مربع</option><option value="4:5">4:5 — عمودي اجتماعي</option></select></div>
+ <div><label for="scenePackStyle">الأسلوب البصري</label><select id="scenePackStyle"><option>سينمائي شبه واقعي</option><option>واقعي وثائقي</option><option>خيال علمي ملحمي</option><option>أنمي سينمائي</option><option>إعلان تجاري</option></select></div>
+</div>
+<label for="scenePackPrompt">وصف المشهد الأساسي</label><textarea id="scenePackPrompt" rows="4" placeholder="صف ما يحدث في المشهد، والشخصيات، والمكان، والمزاج..."></textarea>
+<div class="grid">
+ <div><label for="scenePackCamera">حركة الكاميرا</label><select id="scenePackCamera"><option>حركة بطيئة وثابتة</option><option>اقتراب سينمائي تدريجي</option><option>تتبّع جانبي</option><option>لقطة واسعة ثم اقتراب</option><option>كاميرا محمولة واقعية</option><option>دوران حول الشخصية</option></select></div>
+ <div><label for="scenePackLighting">الإضاءة</label><select id="scenePackLighting"><option>إضاءة سينمائية درامية</option><option>ضوء طبيعي ناعم</option><option>غروب ذهبي</option><option>ليل وظلال عميقة</option><option>نيون مستقبلي</option><option>إضاءة استوديو نظيفة</option></select></div>
+ <div><label for="scenePackMotion">الحركة والتفاصيل</label><input id="scenePackMotion" placeholder="مثال: غبار خفيف، حركة ملابس طبيعية"></div>
+ <div><label for="scenePackAvoid">أشياء يجب تجنبها</label><input id="scenePackAvoid" placeholder="مثال: تشوه الوجه، أصابع إضافية، نصوص عشوائية"></div>
+</div>
+<div class="row"><button class="primary" id="buildScenePack">تجميع البرومبت والحزمة</button><button id="clearScenePack">مسح الحقول والمراجع</button></div>
+<label for="scenePackOutput">البرومبت النهائي</label><textarea id="scenePackOutput" rows="9" readonly placeholder="ستظهر صياغة المشهد هنا..."></textarea>
+<p id="scenePackStatus" class="muted" role="status" aria-live="polite">لم تُنشأ حزمة مشهد بعد.</p>
+<div class="row"><button id="copyScenePackPrompt">نسخ البرومبت</button><button id="downloadScenePack">تنزيل حزمة المشهد JSON</button></div>
+</div>
 <div class="card stack" style="margin-top:14px">
 <h3>منشئ الترجمة SRT</h3>
 <p class="muted">الصق سطرًا واحدًا لكل بطاقة ترجمة. تُوزّع البطاقات بالتتابع حسب المدة التي تختارها. هذه أداة توقيت يدوي وليست تفريغًا تلقائيًا للكلام.</p>
@@ -254,6 +279,54 @@ function mediaCard(file,index){
 $('mediaFiles').addEventListener('change',event=>{const files=[...event.target.files];clearMediaLab();if(!files.length)return;files.forEach((file,index)=>mediaCard(file,index));$('mediaStatus').textContent='تم تحميل '+files.length+' ملف/ملفات للمعاينة المحلية. الملفات لم تُرفع إلى الإنترنت.'});
 $('clearMedia').addEventListener('click',clearMediaLab);
 $('exportMediaReport').addEventListener('click',()=>{if(!mediaReport.length){$('mediaStatus').textContent='اختر ملفًا واحدًا على الأقل قبل تصدير التقرير.';return}const blob=new Blob([JSON.stringify({generatedAt:new Date().toISOString(),processing:'local-browser-only',uploaded:false,files:mediaReport},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='nexus-media-report.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);$('mediaStatus').textContent='تم تجهيز تقرير البيانات الوصفية. لم تُرفع الملفات.'});
+
+const scenePackUrls=[];
+let lastScenePack=null;
+function clearScenePackUrls(){scenePackUrls.forEach(url=>URL.revokeObjectURL(url));scenePackUrls.length=0}
+function selectedFiles(input){return Array.from(input.files||[])}
+function previewScenePackRefs(){
+ clearScenePackUrls();
+ const images=selectedFiles($('sceneRefImages')), audio=selectedFiles($('sceneRefAudio'));
+ const imageBox=$('sceneImagePreviews');imageBox.replaceChildren();
+ images.forEach(file=>{const url=URL.createObjectURL(file);scenePackUrls.push(url);const wrap=document.createElement('div');wrap.className='card';const img=document.createElement('img');img.src=url;img.alt=file.name;img.className='media-preview';const name=document.createElement('p');name.className='muted';name.textContent=file.name;wrap.append(img,name);imageBox.appendChild(wrap)});
+ const audioBox=$('sceneAudioPreview');audioBox.replaceChildren();
+ if(audio.length){const url=URL.createObjectURL(audio[0]);scenePackUrls.push(url);const audioEl=document.createElement('audio');audioEl.controls=true;audioEl.preload='metadata';audioEl.src=url;audioEl.style.width='100%';const name=document.createElement('p');name.className='muted';name.textContent=audio[0].name;audioBox.append(audioEl,name)}
+ $('scenePackStatus').textContent='المراجع المختارة: '+images.length+' صورة و'+audio.length+' ملف صوت. تبقى الملفات على جهازك داخل هذه الجلسة.';
+}
+$('sceneRefImages').addEventListener('change',previewScenePackRefs);
+$('sceneRefAudio').addEventListener('change',previewScenePackRefs);
+function makeScenePack(){
+ const title=$('scenePackTitle').value.trim(),prompt=$('scenePackPrompt').value.trim(),duration=Number($('scenePackDuration').value);
+ if(!prompt){$('scenePackStatus').textContent='اكتب وصف المشهد الأساسي أولًا.';$('scenePackPrompt').focus();return}
+ if(!Number.isInteger(duration)||duration<1||duration>120){$('scenePackStatus').textContent='اختر مدة صحيحة بين 1 و120 ثانية.';return}
+ const images=selectedFiles($('sceneRefImages')),audio=selectedFiles($('sceneRefAudio'));
+ const avoid=$('scenePackAvoid').value.trim();
+ const lines=[
+  title?'اسم المشهد: '+title:'',
+  'الأسلوب البصري: '+$('scenePackStyle').value,
+  'المدة المستهدفة: '+duration+' ثانية',
+  'نسبة الأبعاد: '+$('scenePackRatio').value,
+  'وصف المشهد: '+prompt,
+  'حركة الكاميرا: '+$('scenePackCamera').value,
+  'الإضاءة: '+$('scenePackLighting').value,
+  $('scenePackMotion').value.trim()?'الحركة والتفاصيل: '+$('scenePackMotion').value.trim():'',
+  images.length?'مراجع الصور: استخدم '+images.length+' صورة مرفقة للحفاظ على ملامح الشخصية والمكان والتكوين بحسب كل مرجع. أسماء الملفات: '+images.map(f=>f.name).join('، '):'مراجع الصور: لا توجد صور مرفقة.',
+  audio.length?'مرجع الصوت: '+audio[0].name+' (استخدمه كمرجع صوتي إذا كان المحرك المستهدف يدعم إدخال الصوت).':'مرجع الصوت: لا يوجد ملف صوتي.',
+  avoid?'تجنّب: '+avoid:'',
+  'الاستمرارية: حافظ على هوية الشخصية والملابس والموقع والإضاءة بين اللقطات؛ حركة طبيعية وتفاصيل متسقة.',
+  'قيود التنفيذ: هذه الحزمة تصف المطلوب فقط؛ لا تعني أن التوليد قد نُفّذ.'
+ ].filter(Boolean);
+ const files=[...images,...audio].map(file=>({name:file.name,type:file.type||'غير معروف',sizeBytes:file.size,lastModified:new Date(file.lastModified).toISOString()}));
+ lastScenePack={schemaVersion:1,createdAt:new Date().toISOString(),title:title||'مشهد بدون اسم',durationSeconds:duration,aspectRatio:$('scenePackRatio').value,visualStyle:$('scenePackStyle').value,prompt:lines.join('\n\n'),references:{images:images.map(f=>({name:f.name,type:f.type||'غير معروف',sizeBytes:f.size})),audio:audio.map(f=>({name:f.name,type:f.type||'غير معروف',sizeBytes:f.size}))},referenceFileMetadata:files,generationStatus:'prompt_package_only_not_generated'};
+ $('scenePackOutput').value=lastScenePack.prompt;
+ $('scenePackStatus').textContent='تم تجهيز البرومبت وحزمة بيانات المشهد. الملفات الأصلية لم تُرفع ولم تُضمَّن داخل JSON.';
+}
+$('buildScenePack').addEventListener('click',makeScenePack);
+$('clearScenePack').addEventListener('click',()=>{clearScenePackUrls();['scenePackTitle','scenePackPrompt','scenePackMotion','scenePackAvoid','scenePackOutput'].forEach(key=>$(key).value='');$('scenePackDuration').value='8';$('scenePackRatio').value='9:16';$('scenePackStyle').selectedIndex=0;$('scenePackCamera').selectedIndex=0;$('scenePackLighting').selectedIndex=0;$('sceneRefImages').value='';$('sceneRefAudio').value='';$('sceneImagePreviews').replaceChildren();$('sceneAudioPreview').replaceChildren();lastScenePack=null;$('scenePackStatus').textContent='تم مسح الحقول والمراجع من المختبر.'});
+$('copyScenePackPrompt').addEventListener('click',async()=>{const value=$('scenePackOutput').value;if(!value.trim()){$('scenePackStatus').textContent='أنشئ البرومبت أولًا.';return}try{await navigator.clipboard.writeText(value);$('scenePackStatus').textContent='تم نسخ البرومبت.'}catch(e){$('scenePackOutput').focus();$('scenePackOutput').select();$('scenePackStatus').textContent='حددت النص للنسخ يدويًا؛ استخدم نسخ من جهازك.'}});
+$('downloadScenePack').addEventListener('click',()=>{if(!lastScenePack){$('scenePackStatus').textContent='أنشئ الحزمة أولًا قبل التنزيل.';return}const blob=new Blob([JSON.stringify(lastScenePack,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='nexus-scene-package.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);$('scenePackStatus').textContent='تم تنزيل JSON لوصف المشهد وبيانات المراجع؛ الملفات نفسها غير مضمّنة.'});
+window.addEventListener('beforeunload',clearScenePackUrls);
+
 function srtTime(seconds){const ms=Math.round(seconds*1000),h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000),r=ms%1000;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+','+String(r).padStart(3,'0')}
 $('makeSrt').addEventListener('click',()=>{const lines=$('subtitleLines').value.split(/\r?\n/).map(line=>line.trim()).filter(Boolean);const seconds=Number($('subtitleSeconds').value);if(!lines.length){$('subtitleOutput').value='';$('mediaStatus').textContent='أدخل سطر ترجمة واحدًا على الأقل.';return}if(!Number.isInteger(seconds)||seconds<1||seconds>30){$('mediaStatus').textContent='اختر مدة صحيحة بين 1 و30 ثانية.';return}$('subtitleOutput').value=lines.map((line,i)=>(i+1)+'\n'+srtTime(i*seconds)+' --> '+srtTime((i+1)*seconds)+'\n'+line).join('\n\n')+'\n';$('mediaStatus').textContent='تم إنشاء '+lines.length+' بطاقة SRT محليًا.'});
 $('downloadSrt').addEventListener('click',()=>{const value=$('subtitleOutput').value;if(!value.trim()){$('mediaStatus').textContent='أنشئ الترجمة أولًا قبل التنزيل.';return}const blob=new Blob([value],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='nexus-subtitles.srt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
