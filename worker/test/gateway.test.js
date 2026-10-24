@@ -79,6 +79,16 @@ test("fails closed if required secrets or rate-limit binding are missing", async
   assert.equal(res.status, 503);
 });
 
+test("NEXUS Ω dashboard states capability boundaries without claiming connected engines", () => {
+  const scriptPath = fileURLToPath(new URL("../../i18n.js", import.meta.url));
+  const source = readFileSync(scriptPath, "utf8");
+  assert.match(source, /خارطة القدرات والتوصيلات/);
+  assert.match(source, /الأدوات المتصلة بحساب ChatGPT لا تصبح تلقائيًا جزءًا من الموقع/);
+  assert.match(source, /الموقع لا يولّد مقطعًا حقيقيًا حاليًا/);
+  assert.match(source, /لا يوجد مشروع Supabase متصل حاليًا/);
+  assert.match(source, /اتصال GitHub في ChatGPT لا يمنح صفحة الويب صلاحية مباشرة/);
+});
+
 test("published HTML inline JavaScript parses and includes secure Gemini controls", () => {
   const htmlPath = fileURLToPath(new URL("../../index.html", import.meta.url));
   const html = readFileSync(htmlPath, "utf8");
