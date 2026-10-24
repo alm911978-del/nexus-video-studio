@@ -30,4 +30,4 @@ jobs:
         with:
           node-version: "22"
       - name: Run NEXUS core regression tests
-        run: npm run test:nexus
+        run: npm test
