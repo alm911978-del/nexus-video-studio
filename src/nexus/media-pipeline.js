@@ -3,6 +3,7 @@
  * Real generation only happens when a validated media provider is injected.
  */
 import { selectMediaProvider, validateMediaProvider } from "./media-provider-contract.js";
+import { assertSafeHttpsAssetUrl } from "./security/url-policy.js";
 
 export async function runMediaJob({ providers = [], capability, input = {}, signal } = {}) {
   const selection = selectMediaProvider(providers, capability);
@@ -31,20 +32,25 @@ export async function runMediaJob({ providers = [], capability, input = {}, sign
 
   try {
     const result = await selection.provider.adapter({ capability, input, signal });
-    // Honest contract: require an absolute HTTPS URL without credentials
-    if (!result || typeof result.assetUrl !== "string" || !result.assetUrl.startsWith("https://")) {
+    // Validate URLs through the shared policy, including credentials and local/private hosts.
+    if (!result || typeof result.assetUrl !== "string") {
       return {
         ok: false,
         status: "invalid-result",
-        message: "النتيجة يجب أن تحتوي على رابط HTTPS مطلق للأصل.",
+        message: "النتيجة يجب أن تحتوي على رابط أصل صالح.",
         capability
       };
     }
-    if (/[\u0000-\u001F]|@|:\/\/[^/]*:/.test(result.assetUrl)) {
+    const urlCheck = assertSafeHttpsAssetUrl(result.assetUrl);
+    if (!urlCheck.ok) {
+      const unsafeReasons = new Set([
+        "credentials-in-url", "control-chars", "private-or-local-host"
+      ]);
       return {
         ok: false,
-        status: "unsafe-url",
-        message: "رابط الأصل يحتوي على أحرف غير آمنة أو بيانات اعتماد.",
+        status: unsafeReasons.has(urlCheck.reason) ? "unsafe-url" : "invalid-result",
+        message: "رابط الأصل مرفوض وفق سياسة أمان الروابط.",
+        reason: urlCheck.reason,
         capability
       };
     }
@@ -53,7 +59,7 @@ export async function runMediaJob({ providers = [], capability, input = {}, sign
       status: "succeeded",
       capability,
       providerId: selection.provider.id,
-      assetUrl: result.assetUrl,
+      assetUrl: urlCheck.url,
       metadata: result.metadata || {},
       verified: Boolean(result.verified)
     };
