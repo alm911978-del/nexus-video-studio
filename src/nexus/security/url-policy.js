@@ -36,12 +36,18 @@ export function assertSafeHttpsAssetUrl(url) {
     host === "127.0.0.1" ||
     host === "0.0.0.0" ||
     host === "::1" ||
+    host === "[::1]" ||
     host.endsWith(".local") ||
     host.startsWith("169.254.") ||
     host.startsWith("10.") ||
     host.startsWith("192.168.") ||
     /^172\.(1[6-9]|2\d|3[0-1])\./.test(host)
   ) {
+    return { ok: false, reason: "private-or-local-host" };
+  }
+  // Block IPv6 unique-local (fc00::/7) and link-local (fe80::/10) ranges.
+  const normalizedIpv6 = host.replace(/^\[|\]$/g, "");
+  if (/^(fc|fd)[0-9a-f]{2}:/i.test(normalizedIpv6) || /^fe[89ab][0-9a-f]:/i.test(normalizedIpv6)) {
     return { ok: false, reason: "private-or-local-host" };
   }
   return { ok: true, url: parsed.toString() };
