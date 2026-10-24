@@ -7,11 +7,11 @@
 :root{color-scheme:dark;--bg:#0d0f17;--panel:#151824;--line:#2a3042;--text:#f4f5fb;--muted:#a4abc0;--accent:#9b8cff;--mint:#5fe1c2}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% -20%,#252044 0,transparent 45%),var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif}
 button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid var(--line);background:#24283a;color:var(--text);border-radius:10px;padding:9px 13px}button.primary{background:var(--accent);color:#151226;border-color:transparent;font-weight:700}button.danger{color:#ff9eaa}input,textarea,select{width:100%;background:#0f121c;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px}textarea{min-height:90px;resize:vertical}label{display:block;color:var(--muted);font-size:13px;margin:8px 0 4px}.app{max-width:1100px;margin:auto;padding:16px 14px 42px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding:10px 0 18px;margin-bottom:18px}.brand{display:flex;align-items:center;gap:10px}.logo{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--mint));color:#111;font-weight:900}.muted,small{color:var(--muted)}.layout{display:grid;grid-template-columns:220px 1fr;gap:16px}.panel,.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px}.nav{display:grid;gap:8px;align-content:start}.nav button{text-align:right;background:transparent}.nav button.active{background:#292442;border-color:#5c4e94}.page{display:none}.page.active{display:block}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.stack{display:grid;gap:12px}.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.row>*{flex:1}.row button{flex:0 0 auto}.item{padding:12px;border:1px solid var(--line);border-radius:12px;margin-top:9px}.item h3{margin:0 0 4px;font-size:16px}.pill{display:inline-block;padding:3px 9px;border-radius:20px;background:#26233e;color:#c9bdff;font-size:12px}.notice{border:1px solid #514875;background:#1c1a2d;border-radius:12px;padding:12px;margin-bottom:14px}h1{font-size:clamp(23px,4vw,32px);margin:0}h2{font-size:20px;margin:0 0 10px}h3{font-size:16px}.empty{padding:18px;text-align:center;color:var(--muted)}.footer{margin-top:22px;color:var(--muted);font-size:12px}@media(max-width:700px){.layout{grid-template-columns:1fr}.nav{grid-template-columns:repeat(2,minmax(0,1fr))}.nav button{text-align:center}.app{padding:12px}}
-.media-preview{display:block;max-width:100%;max-height:260px;margin-top:10px;border-radius:10px;background:#080a10}.media-card{min-width:0;overflow-wrap:anywhere}.media-meta{font-size:13px;color:var(--muted);white-space:pre-wrap}</style></head>
+.chat-user{background:#292442;border:1px solid #514875;border-radius:14px;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere}.chat-assistant{background:#10131e;border:1px solid var(--line);border-radius:14px;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere}.chat-label{font-size:12px;color:var(--muted);margin-bottom:4px}.chat-error{color:#ffb0b8}.media-preview{display:block;max-width:100%;max-height:260px;margin-top:10px;border-radius:10px;background:#080a10}.media-card{min-width:0;overflow-wrap:anywhere}.media-meta{font-size:13px;color:var(--muted);white-space:pre-wrap}</style></head>
 <body><main class="app">
 <header class="top"><div class="brand"><div class="logo">NΩ</div><div><h1>NEXUS VIDEO 5.0</h1><div class="muted">استوديو صناعة الأفلام بالذكاء الاصطناعي</div></div></div><label for="languageSwitcher" style="display:inline-block;margin:0 6px">اللغة / Language</label><select id="languageSwitcher" aria-label="Language" style="width:auto;min-width:125px"><option value="ar">العربية</option><option value="en">English</option><option value="fr">Français</option><option value="es">Español</option></select><span class="pill">Prototype 0.3 · محلي</span></header>
 <div class="notice"><strong>تنبيه الشفافية:</strong> إدارة المشاريع وكتابة ملفات التطوير تعمل محليًا. توليد الفيديو والصوت ومزامنة الشفاه غير موصولة. لا تستخدم مفاتيح API داخل الواجهة. تُحفظ البيانات في هذا المتصفح فقط.</div>
-<div class="layout"><nav class="panel nav" aria-label="التنقل"><button class="active" data-page="projects">المشاريع</button><button data-page="writer">كاتب المسلسلات</button><button data-page="characters">الشخصيات</button><button data-page="scenes">المشاهد</button><button data-page="backup">النسخ الاحتياطي</button><button data-page="media">مختبر الوسائط</button><button data-page="engine">حالة المحركات</button></nav>
+<div class="layout"><nav class="panel nav" aria-label="التنقل"><button class="active" data-page="projects">المشاريع</button><button data-page="writer">كاتب المسلسلات</button><button data-page="assistant">NEXUS AI · المساعد العام</button><button data-page="characters">الشخصيات</button><button data-page="scenes">المشاهد</button><button data-page="backup">النسخ الاحتياطي</button><button data-page="media">مختبر الوسائط</button><button data-page="engine">حالة المحركات</button></nav>
 <div>
 <section id="projects" class="page active"><div class="row"><h2>مشاريعي</h2><button class="primary" id="newProject">＋ مشروع جديد</button></div><div id="projectList" class="grid"></div><div id="projectForm" class="card" hidden><h3>إنشاء مشروع</h3><label>اسم المشروع</label><input id="pName" placeholder="مثال: فارس الصحراء الأخير"><label>ملخص القصة</label><textarea id="pSummary" placeholder="اكتب فكرة الفيلم..."></textarea><div class="row"><div><label>الأسلوب</label><select id="pStyle"><option>سينمائي شبه واقعي</option><option>أنمي</option><option>وثائقي</option><option>خيال علمي</option></select></div><div><label>نسبة العرض</label><select id="pRatio"><option>9:16 عمودي</option><option>16:9 أفقي</option><option>1:1 مربع</option></select></div></div><div class="row" style="margin-top:10px"><button class="primary" id="saveProject">حفظ المشروع</button><button id="cancelProject">إلغاء</button></div></div></section>
 <section id="writer" class="page">
@@ -39,6 +39,17 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid
 </details>
 <label>ملف التطوير / الطلب الجاهز</label><textarea id="wOutput" style="min-height:300px" placeholder="سيظهر هنا طلب احترافي متكامل لتطوير المسلسل..." readonly></textarea>
 <p class="muted">الحماية: مفتاح Gemini يبقى في Cloudflare، مع تحقق Turnstile وحدّ يومي حسب عنوان IP وفحص مدخلات الطلب. إعداد البوابة ونشرها مطلوبان مرة واحدة قبل أول توليد.</p>
+</div>
+</section>
+<section id="assistant" class="page">
+<div class="row"><h2>NEXUS AI — المساعد العام</h2><span class="pill">Gemini · اتصال آمن</span></div>
+<p class="muted">مساعد عام للأسئلة والشرح والكتابة والبرمجة والتحليل والتخطيط، ويمكنه أيضًا مساعدتك في NEXUS VIDEO. يعتمد على بوابة Gemini التي تضبطها في قسم كاتب المسلسلات. لا يتصفح الإنترنت تلقائيًا ولا ينفّذ تغييرات في ملفاتك من هذه الدردشة.</p>
+<div class="card stack">
+<div class="notice"><strong>قبل البدء:</strong> يلزم نشر بوابة Worker وضبط Gemini وTurnstile في «كاتب المسلسلات». مفتاح Gemini السري يبقى في Cloudflare ولا تضعه هنا.</div>
+<div id="assistantMessages" class="stack" aria-live="polite" aria-label="محادثة المساعد"><div class="item"><strong>NEXUS AI</strong><p>مرحبًا! أنا مساعدك العام. اسألني عن أي موضوع، أو اطلب مني شرحًا أو كتابة أو تحليلًا أو مساعدة برمجية. سأوضح حدود معرفتي وما لم أتحقق منه.</p></div></div>
+<div><label for="assistantInput">رسالتك</label><textarea id="assistantInput" rows="3" maxlength="8000" placeholder="اكتب سؤالك هنا… (Enter للإرسال، Shift+Enter لسطر جديد)"></textarea></div>
+<div class="row"><button class="primary" id="assistantSend">إرسال</button><button id="assistantClear">محادثة جديدة</button><button id="assistantCopy">نسخ آخر إجابة</button></div>
+<div><label>فحص الأمان (Turnstile)</label><div id="assistantTurnstileWidget"></div><p id="assistantStatus" class="muted" role="status" aria-live="polite">اضبط البوابة أولًا من قسم كاتب المسلسلات، ثم أكمل فحص الأمان.</p></div>
 </div>
 </section>
 <section id="characters" class="page"><div class="row"><h2>ذاكرة الشخصيات</h2><button class="primary" id="newCharacter">＋ شخصية</button></div><div id="characterForm" class="card" hidden><label>اسم الشخصية</label><input id="cName" placeholder="اسم الشخصية"><label>الوصف الثابت (الوجه، الشعر، الملابس، العمر)</label><textarea id="cDesc" placeholder="اكتب السمات التي يجب الحفاظ عليها بين المشاهد"></textarea><div class="row"><button class="primary" id="saveCharacter">حفظ الشخصية</button><button id="cancelCharacter">إلغاء</button></div></div><div id="characterList" class="grid"></div></section>
@@ -259,6 +270,51 @@ $('generateGemini').onclick=async()=>{
 };
 if(geminiSettings.siteKey){if(window.turnstile)renderTurnstileWidget();else loadTurnstileScript()}
 
+
+
+// NEXUS AI general assistant: uses the same secure Worker, with no API key in the browser.
+let assistantTurnstileToken='', assistantTurnstileWidgetId=null;
+const assistantMessages=[];
+function assistantStatus(message,isError=false){const el=$('assistantStatus');if(el){el.textContent=message;el.style.color=isError?'#ff9eaa':''}}
+function renderAssistantTurnstileWidget(){
+ if(!geminiSettings.siteKey){assistantStatus('افتح كاتب المسلسلات ← إعداد اتصال Gemini الآمن، وأدخل رابط Worker ومفتاح Turnstile العام ثم احفظ.',true);return}
+ if(!window.turnstile){loadTurnstileScript();assistantStatus('جارٍ تحميل فحص الأمان. انتظر قليلًا ثم افتح هذه الصفحة مجددًا.');return}
+ const target=$('assistantTurnstileWidget');if(!target)return;
+ try{
+  assistantTurnstileToken='';target.replaceChildren();
+  assistantTurnstileWidgetId=window.turnstile.render(target,{sitekey:geminiSettings.siteKey,callback:t=>{assistantTurnstileToken=t;assistantStatus('فحص الأمان مكتمل. يمكنك إرسال سؤالك.')},'expired-callback':()=>{assistantTurnstileToken='';assistantStatus('انتهت صلاحية فحص الأمان؛ أكمله مرة أخرى.',true)},'error-callback':()=>{assistantTurnstileToken='';assistantStatus('تعذر إكمال فحص الأمان؛ أعد المحاولة.',true)},theme:'auto'});
+ }catch(_){assistantStatus('تعذر تحميل فحص الأمان. تحقق من Turnstile Site Key والنطاق المسجل.',true)}
+}
+function appendAssistantMessage(role,text,isError=false){
+ const box=document.createElement('article');box.className=role==='user'?'chat-user':'chat-assistant';
+ const label=document.createElement('div');label.className='chat-label';label.textContent=role==='user'?'أنت':'NEXUS AI';box.appendChild(label);
+ const body=document.createElement('div');body.textContent=text;if(isError)body.className='chat-error';box.appendChild(body);
+ $('assistantMessages').appendChild(box);box.scrollIntoView({behavior:'smooth',block:'nearest'});return box;
+}
+function resetAssistantTurnstile(){try{if(window.turnstile&&assistantTurnstileWidgetId!==null)window.turnstile.reset(assistantTurnstileWidgetId)}catch(_){}assistantTurnstileToken=''}
+async function sendAssistantMessage(){
+ const input=$('assistantInput'),question=input.value.trim();
+ if(!question)return;
+ if(!geminiSettings.endpoint||!geminiSettings.siteKey){assistantStatus('البوابة غير مضبوطة. افتح كاتب المسلسلات ← إعداد اتصال Gemini الآمن، واحفظ رابط Worker ومفتاح Turnstile العام.',true);return}
+ if(!assistantTurnstileToken){assistantStatus('أكمل فحص الأمان أولًا ثم أرسل السؤال.',true);if(!window.turnstile)renderAssistantTurnstileWidget();return}
+ const button=$('assistantSend');button.disabled=true;button.textContent='يفكر…';input.disabled=true;
+ input.value='';assistantMessages.push({role:'user',text:question});appendAssistantMessage('user',question);
+ const history=assistantMessages.slice(-10).map(m=>(m.role==='user'?'المستخدم':'المساعد')+':\n'+m.text).join('\n\n');
+ const prompt='أجب عن أحدث رسالة للمستخدم مع الاستفادة من سياق المحادثة السابقة. كن مساعدًا عامًا دقيقًا وعمليًا. أجب بالعربية ما لم يطلب المستخدم لغة أخرى. إذا كان الطلب يحتاج معلومات حديثة أو تصفحًا ولم تكن لديك أداة تصفح متصلة، صرّح بذلك ولا تدّعِ أنك تحققت من الإنترنت. لا تدّعِ تنفيذ أفعال أو فتح ملفات لم تنفذها. نظّم الإجابة بحسب الحاجة.\n\nسياق المحادثة:\n'+history;
+ const loading=appendAssistantMessage('assistant','جارٍ إعداد الإجابة…');
+ try{
+  const res=await fetch(geminiSettings.endpoint+'/api/generate',{method:'POST',headers:{'content-type':'application/json','accept':'application/json'},body:JSON.stringify({action:'general',prompt,turnstileToken:assistantTurnstileToken})});
+  let data;try{data=await res.json()}catch(_){throw Error('استجابة غير صالحة من البوابة')}
+  if(!res.ok||!data.ok)throw Error(data.error||('HTTP '+res.status));
+  loading.remove();assistantMessages.push({role:'assistant',text:data.text});appendAssistantMessage('assistant',data.text);
+  assistantStatus('وصلت الإجابة من '+data.model+'. راجعها قبل الاعتماد عليها.');
+ }catch(e){loading.remove();appendAssistantMessage('assistant','تعذر الحصول على إجابة: '+(e.message||'خطأ غير معروف')+'. تحقق من نشر Worker وحصة Gemini ثم أعد المحاولة.',true);assistantStatus('فشل الطلب. '+(e.message||''),true)}
+ finally{resetAssistantTurnstile();button.disabled=false;button.textContent='إرسال';input.disabled=false;input.focus()}
+}
+$('assistantSend').addEventListener('click',sendAssistantMessage);
+$('assistantInput').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAssistantMessage()}});
+$('assistantClear').addEventListener('click',()=>{assistantMessages.length=0;$('assistantMessages').replaceChildren();appendAssistantMessage('assistant','بدأنا محادثة جديدة. كيف أستطيع مساعدتك؟');assistantStatus('تم مسح سياق المحادثة من الذاكرة المؤقتة لهذه الصفحة.')});
+$('assistantCopy').addEventListener('click',async()=>{const last=[...assistantMessages].reverse().find(m=>m.role==='assistant');if(!last){assistantStatus('لا توجد إجابة لنسخها بعد.',true);return}try{await navigator.clipboard.writeText(last.text);assistantStatus('تم نسخ آخر إجابة.')}catch(_){assistantStatus('تعذر النسخ التلقائي على هذا المتصفح. حدّد الإجابة وانسخها يدويًا.',true)}});
 
 const mediaReport=[],mediaObjectUrls=[];
 function formatBytes(bytes){if(!Number.isFinite(bytes))return 'غير معروف';if(bytes<1024)return bytes+' B';const units=['KB','MB','GB'];let n=bytes/1024,i=0;while(n>=1024&&i<units.length-1){n/=1024;i++}return n.toFixed(2)+' '+units[i]}
