@@ -22,7 +22,7 @@ This file tracks real integration status. A tool is **not connected** just becau
 ## Verification record
 
 - **2026-10-24 — GitHub Actions:** `NEXUS Worker Tests` passed on commit `f45e8eab0ca75fb00b3b8826500d97862b603c7a` (run: https://github.com/alm911978-del/nexus-video-studio/actions/runs/40051308947). The workflow ran `npm test` using Node.js 20.
-- **2026-10-24 — LLM provider routing:** added allowlisted Gemini, Groq, OpenRouter, and Mistral options through PR #7 (merged as `10a996e10f02e4b6045cbd90aaff7959fc35b8d1`). The PR's automated Worker/UI test run passed (https://github.com/alm911978-del/nexus-video-studio/actions/runs/40120135137). The main-branch test and GitHub Pages deployment were still running at the time of this registry update. No provider API call or Cloudflare deployment was performed.
+- **2026-10-24 — LLM provider routing:** added allowlisted Gemini, Groq, OpenRouter, and Mistral options through PR #7 (merged as `10a996e10f02e4b6045cbd90aaff7959fc35b8d1`). The PR checks passed (https://github.com/alm911978-del/nexus-video-studio/actions/runs/40120135137). After adding a dashboard-status regression test and correcting its assertions to match the actual UI, the main-branch Worker test suite passed on commit `65c70241f1d4fe39377aa787cbee311488237645` (22 tests; run: https://github.com/alm911978-del/nexus-video-studio/actions/runs/40122707801). The corresponding GitHub Pages deployment was queued when this note was written. No provider API call or Cloudflare Worker deployment was performed.
 - The suite checks the media lab/SRT controls, backup-import safeguards, escaped record IDs, consistent prototype-version labels, and a mocked successful Gemini 3.8 request.
 - **2026-10-24 — Published-site browser smoke test:** confirmed the live page title is `NEXUS VIDEO 5.0 — الاستوديو`, the footer shows prototype `0.3`, the local series-development template generated non-empty output, and two Arabic subtitle lines produced valid sequential SRT timestamps. No real media file was uploaded and no Gemini request was sent.
 - **2026-10-24 — GitHub Pages:** latest deployment completed successfully for commit `f45e8eab0ca75fb00b3b8826500d97862b603c7a` (run: https://github.com/alm911978-del/nexus-video-studio/actions/runs/40051308735).
@@ -36,6 +36,7 @@ This file tracks real integration status. A tool is **not connected** just becau
 4. A health check proves connectivity only, not that generation works.
 5. Keep the static site functional and preserve existing project data.
 6. Check provider quotas, model availability, regional access, and terms before choosing an API.
+7. Tools connected to the ChatGPT development session (for example GitHub, Context7, Replit, Vercel, and MagicPath) do not automatically become integrations inside the published website; each website integration needs its own approved API path, server-side credentials where required, and end-to-end tests.
 
 ## Tool groups
 
