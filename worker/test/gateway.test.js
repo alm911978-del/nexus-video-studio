@@ -67,6 +67,9 @@ test("published HTML inline JavaScript parses and includes secure Gemini control
   assert.ok(inlineScripts.length > 0, "expected an inline application script");
   for (const source of inlineScripts) new Script(source);
   assert.match(html, /id="generateGemini"/);
+  assert.match(html, /id="assistantMessages"/);
+  assert.match(html, /id="assistantSend"/);
+  assert.match(html, /action:'general'/);
   assert.match(html, /id="turnstileWidget"/);
   assert.match(html, /api\/generate/);
   assert.doesNotMatch(html, /\bAIza[0-9A-Za-z_-]{35}\b/, "do not embed a Google API key in public HTML");
@@ -179,6 +182,40 @@ test("Gemini 3.8 generation request uses supported parameters and returns model 
     assert.equal(body.model, "gemini-3.8-flash");
     assert.equal(body.text, "NEXUS_TEST_OK");
     assert.equal(upstreamCalls.length, 2);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("general assistant action is accepted by the secure gateway", async () => {
+  const originalFetch = globalThis.fetch;
+  let capturedSystem = "";
+  globalThis.fetch = async (url, options = {}) => {
+    const target = String(url);
+    if (target.includes("challenges.cloudflare.com/turnstile/v0/siteverify")) {
+      return new Response(JSON.stringify({ success: true, hostname: "alm911978-del.github.io" }), {
+        status: 200, headers: { "content-type": "application/json" }
+      });
+    }
+    if (target.includes("generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent")) {
+      const payload = JSON.parse(options.body);
+      capturedSystem = payload.systemInstruction.parts[0].text;
+      return new Response(JSON.stringify({
+        candidates: [{ content: { parts: [{ text: "GENERAL_ASSISTANT_OK" }] } }]
+      }), { status: 200, headers: { "content-type": "application/json" } });
+    }
+    throw new Error("Unexpected outbound request");
+  };
+  try {
+    const res = await worker.fetch(req("/api/generate", {
+      method: "POST",
+      body: JSON.stringify({ action: "general", prompt: "اشرح لي مفهومًا", turnstileToken: "valid-token" }),
+      headers: { "content-type": "application/json" }
+    }), env);
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.text, "GENERAL_ASSISTANT_OK");
+    assert.match(capturedSystem, /مساعد عام متعدد المجالات/);
   } finally {
     globalThis.fetch = originalFetch;
   }
