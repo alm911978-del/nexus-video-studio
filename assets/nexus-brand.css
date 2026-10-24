@@ -1,0 +1,19 @@
+/* NEXUS VIDEO 5.0 brand layer — free, dependency-free */
+:root{--nx-mint:#72f0db;--nx-violet:#9b8cff;--nx-gold:#e8c77a}
+body{background:radial-gradient(ellipse at 84% -12%,rgba(100,83,177,.22),transparent 42%),radial-gradient(ellipse at 4% 90%,rgba(37,143,137,.09),transparent 35%),var(--bg)}
+.brand{gap:12px}
+.brand .logo{width:52px;height:52px;border-radius:16px;background:linear-gradient(145deg,#20263a,#111520);border:1px solid #3c4560;box-shadow:0 0 26px rgba(114,240,219,.09);flex:0 0 auto;overflow:hidden}
+.brand .logo img,.brand .logo svg{display:block;width:100%;height:100%;object-fit:contain}
+.top{position:relative}
+.top:after{content:"";position:absolute;bottom:-1px;right:0;width:min(260px,48%);height:2px;background:linear-gradient(90deg,transparent,var(--nx-mint),var(--nx-violet));opacity:.8}
+.layout{grid-template-columns:245px minmax(0,1fr);gap:18px;align-items:start}
+.nav{position:sticky;top:14px;gap:6px;padding:12px;background:linear-gradient(180deg,#171b2a,#121520);box-shadow:0 16px 44px rgba(0,0,0,.12)}
+.nav:before{content:"NEXUS NAVIGATION";direction:ltr;text-align:left;color:#777f9b;font-size:10px;letter-spacing:2px;padding:8px 10px 4px;font-weight:800}
+.nav button{position:relative;display:flex;align-items:center;gap:10px;min-height:43px;padding:10px 12px;border:1px solid transparent;border-radius:11px;color:#c7cce0;transition:background .18s,border-color .18s}
+.nav button:before{content:"";width:7px;height:7px;border:1.5px solid #7f89a7;border-radius:2px;flex:0 0 auto;transform:rotate(45deg)}
+.nav button:hover{background:#202538;border-color:#343c55}
+.nav button.active{background:linear-gradient(100deg,rgba(155,140,255,.19),rgba(114,240,219,.06));border-color:#4c4b78;color:#fff;box-shadow:inset -3px 0 0 var(--nx-mint)}
+.nav button.active:before{background:var(--nx-mint);border-color:var(--nx-mint);box-shadow:0 0 12px rgba(114,240,219,.45)}
+.panel,.card{box-shadow:0 10px 32px rgba(0,0,0,.08)}
+@media(max-width:700px){.layout{grid-template-columns:minmax(0,1fr);gap:12px}.nav{position:static;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.nav:before{grid-column:1/-1}.nav button{justify-content:flex-start;font-size:13px;min-height:42px;padding:8px}.brand .logo{width:46px;height:46px}}
+@media(prefers-reduced-motion:reduce){.nav button{transition:none}}
