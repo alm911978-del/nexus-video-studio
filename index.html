@@ -22,6 +22,13 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid
    <div id="authConfirmWrap"><label for="authConfirm">تأكيد كلمة المرور</label><input id="authConfirm" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="أعد كتابة كلمة المرور"></div>
    <button id="authSubmit" class="primary" type="submit">إنشاء حساب</button>
   </form>
+  <div id="authRecoveryPanel" class="stack" style="margin-top:12px" hidden>
+   <h3>تعيين كلمة مرور جديدة</h3>
+   <p class="muted">أنشئ كلمة مرور جديدة لحسابك.</p>
+   <div><label for="authNewPassword">كلمة المرور الجديدة</label><input id="authNewPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="8 أحرف على الأقل"></div>
+   <div><label for="authNewPasswordConfirm">تأكيد كلمة المرور الجديدة</label><input id="authNewPasswordConfirm" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="أعد كتابة كلمة المرور"></div>
+   <button id="authUpdatePassword" class="primary" type="button">حفظ كلمة المرور الجديدة</button>
+  </div>
   <p id="authStatus" class="muted" role="status" aria-live="polite">لن تُرسل أي بيانات حتى تضبط الخدمة وتضغط زر الإرسال بنفسك.</p>
   <p class="muted" style="font-size:12px">المشاريع في هذه النسخة تُحفظ محليًا في متصفحك لكل حساب على حدة؛ لم يُفعّل التخزين السحابي للمشاريع بعد.</p>
  </div>
@@ -158,9 +165,33 @@ async function initializeAuth(){
  const {data,error}=await supabaseClient.auth.getSession();
  if(error){authStatus('تعذر التحقق من الجلسة: '+error.message,true);return}
  showWorkspace(data.session?.user||null);authReady=true;
- supabaseClient.auth.onAuthStateChange((_event,session)=>{showWorkspace(session?.user||null)});
+ supabaseClient.auth.onAuthStateChange((event,session)=>{
+  if(event==='PASSWORD_RECOVERY'){
+   $('authGate').hidden=false;$('appWorkspace').hidden=true;$('authForm').hidden=true;$('authRecoveryPanel').hidden=false;
+   $('authConfigStatus').textContent='تم فتح رابط استعادة كلمة المرور. أدخل كلمة مرور جديدة.';
+   authStatus('رابط الاستعادة صالح. أنشئ كلمة مرور جديدة ثم احفظها.');
+   return;
+  }
+  if(!$('authRecoveryPanel').hidden&&event!=='SIGNED_OUT')return;
+  if(event==='SIGNED_OUT'){$('authForm').hidden=false;$('authRecoveryPanel').hidden=true;}
+  showWorkspace(session?.user||null);
+ });
  if(!currentAuthUser)authStatus('أدخل بيانات حسابك. لن تُرسل إلا عند الضغط على زر الإرسال.');
 }
+$('authUpdatePassword').addEventListener('click',async()=>{
+ if(!supabaseClient){authStatus('خدمة الحسابات غير متاحة.',true);return}
+ const password=$('authNewPassword').value,confirm=$('authNewPasswordConfirm').value;
+ if(password.length<8){authStatus('استخدم كلمة مرور من 8 أحرف على الأقل.',true);return}
+ if(password!==confirm){authStatus('كلمتا المرور غير متطابقتين.',true);return}
+ const button=$('authUpdatePassword');button.disabled=true;
+ try{
+  const {data,error}=await supabaseClient.auth.updateUser({password});
+  if(error)throw error;
+  $('authForm').hidden=false;$('authRecoveryPanel').hidden=true;$('authNewPassword').value='';$('authNewPasswordConfirm').value='';
+  showWorkspace(data.user||currentAuthUser);authStatus('تم تحديث كلمة المرور بنجاح.');
+ }catch(error){authStatus(error.message||'تعذر تحديث كلمة المرور.',true)}
+ finally{button.disabled=false}
+});
 $('authModeSignup').addEventListener('click',()=>setAuthMode('signup'));
 $('authModeLogin').addEventListener('click',()=>setAuthMode('login'));
 $('authModeReset').addEventListener('click',()=>setAuthMode('reset'));
