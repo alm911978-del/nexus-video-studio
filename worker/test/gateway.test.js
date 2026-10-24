@@ -128,3 +128,16 @@ test("static media lab exposes local-only media inspection and SRT export contro
   assert.match(html, /processing:'local-browser-only',uploaded:false/);
   assert.match(html, /function srtTime\(seconds\)/);
 });
+
+test("backup import validates record shapes and rendered IDs are HTML-escaped", () => {
+  const htmlPath = fileURLToPath(new URL("../../index.html", import.meta.url));
+  const html = readFileSync(htmlPath, "utf8");
+  assert.ok(html.includes(`data-id="'+esc(p.id)+'"`));
+  assert.ok(html.includes(`data-id="'+esc(c.id)+'"`));
+  assert.ok(html.includes(`data-copy="'+esc(s.id)+'"`));
+  assert.ok(html.includes(`<option value="'+esc(p.id)+'"`));
+  assert.match(html, /function validBackupRecord\(/);
+  assert.match(html, /function validBackup\(x\)/);
+  assert.match(html, /item\.id\.length<=128/);
+  assert.match(html, /لم يتم استبدال بياناتك/);
+});
