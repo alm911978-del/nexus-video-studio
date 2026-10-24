@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+<title id="title">NEXUS VIDEO</title><desc id="desc">Geometric N symbol inside a futuristic frame</desc>
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#72f0db"/><stop offset="1" stop-color="#9b8cff"/></linearGradient></defs>
+<rect x="5" y="5" width="118" height="118" rx="29" fill="#111520" stroke="#39435b" stroke-width="2"/>
+<path d="M64 15 109 41v46l-45 26L19 87V41Z" fill="none" stroke="url(#g)" stroke-width="4"/>
+<path d="M39 83V45l50 38V45" fill="none" stroke="#f4f5fb" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="64" cy="64" r="5" fill="#72f0db"/>
+</svg>
