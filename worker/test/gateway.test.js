@@ -256,3 +256,18 @@ test("NEXUS prototype version labels are consistent", () => {
   assert.ok(html.includes("نسخة تجريبية 0.3"));
   assert.ok(!html.includes("Prototype 0.2") && !html.includes("نسخة تجريبية 0.1"));
 });
+
+test("NEXUS visual layer ships the brand assets, dashboard, and honest backend status", () => {
+  const root = fileURLToPath(new URL("../../", import.meta.url));
+  const i18n = readFileSync(new URL("../../i18n.js", import.meta.url), "utf8");
+  const css = readFileSync(new URL("../../assets/nexus-brand.css", import.meta.url), "utf8");
+  const svg = readFileSync(new URL("../../assets/nexus-mark.svg", import.meta.url), "utf8");
+  new Script(i18n);
+  assert.match(i18n, /nexus-mark\.svg/);
+  assert.match(i18n, /nexus-brand\.css/);
+  assert.match(i18n, /nexus-run-audit/);
+  assert.match(i18n, /nexus-community/);
+  assert.match(i18n, /لا يوجد مشروع Supabase متصل/);
+  assert.match(css, /@media\(max-width:700px\)/);
+  assert.match(svg, /<svg[\s\S]*NEXUS VIDEO/);
+});
