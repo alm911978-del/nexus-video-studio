@@ -299,7 +299,7 @@ async function sendAssistantMessage(){
  if(!assistantTurnstileToken){assistantStatus('أكمل فحص الأمان أولًا ثم أرسل السؤال.',true);if(!window.turnstile)renderAssistantTurnstileWidget();return}
  const button=$('assistantSend');button.disabled=true;button.textContent='يفكر…';input.disabled=true;
  input.value='';assistantMessages.push({role:'user',text:question});appendAssistantMessage('user',question);
- const history=assistantMessages.slice(-10).map(m=>(m.role==='user'?'المستخدم':'المساعد')+':\n'+m.text).join('\n\n');
+ const history=assistantMessages.slice(-10).map(m=>(m.role==='user'?'المستخدم':'المساعد')+':\n'+m.text).join('\n\n').slice(-9000);
  const prompt='أجب عن أحدث رسالة للمستخدم مع الاستفادة من سياق المحادثة السابقة. كن مساعدًا عامًا دقيقًا وعمليًا. أجب بالعربية ما لم يطلب المستخدم لغة أخرى. إذا كان الطلب يحتاج معلومات حديثة أو تصفحًا ولم تكن لديك أداة تصفح متصلة، صرّح بذلك ولا تدّعِ أنك تحققت من الإنترنت. لا تدّعِ تنفيذ أفعال أو فتح ملفات لم تنفذها. نظّم الإجابة بحسب الحاجة.\n\nسياق المحادثة:\n'+history;
  const loading=appendAssistantMessage('assistant','جارٍ إعداد الإجابة…');
  try{
