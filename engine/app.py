@@ -19,7 +19,26 @@ from comfyui_provider import (
     is_configured as comfyui_is_configured,
 )
 
-APP_VERSION = "0.1.1"
+APP_VERSION = "0.1.2"
+VIDEO_MEDIA_TYPES = {
+    ".mp4": "video/mp4",
+    ".webm": "video/webm",
+    ".mov": "video/quicktime",
+    ".mkv": "video/x-matroska",
+}
+
+
+def _looks_like_video_payload(content: bytes, suffix: str) -> bool:
+    """Check basic container signatures; this is a sanity check, not full media decoding."""
+    if not isinstance(content, bytes) or len(content) < 12:
+        return False
+    if suffix in {".mp4", ".mov"}:
+        return content[4:8] == b"ftyp"
+    if suffix in {".webm", ".mkv"}:
+        return content.startswith(bytes.fromhex("1A45DFA3"))
+    return False
+
+
 app = FastAPI(
     title="NEXUS VIDEO 5.0 Engine API",
     version=APP_VERSION,
@@ -34,9 +53,16 @@ def _ffmpeg_path() -> str | None:
     return shutil.which(configured)
 
 
+def _ffprobe_path() -> str | None:
+    configured = os.getenv("FFPROBE_PATH", "ffprobe")
+    if Path(configured).is_file():
+        return configured
+    return shutil.which(configured)
+
+
 def _has_audio_stream(video_path: Path) -> bool:
     """Return whether ffprobe detects an audio stream; fail closed if probing fails."""
-    ffprobe = shutil.which(os.getenv("FFPROBE_PATH", "ffprobe"))
+    ffprobe = _ffprobe_path()
     if not ffprobe:
         raise HTTPException(
             status_code=503,
@@ -113,10 +139,20 @@ def generate_video(request: GenerateRequest):
         raise HTTPException(status_code=503, detail={"code": "VIDEO_PROVIDER_NOT_READY", "message": str(exc)})
     except ProviderGenerationError as exc:
         raise HTTPException(status_code=502, detail={"code": "VIDEO_GENERATION_FAILED", "message": str(exc)})
-    media_type = "video/webm" if suffix == ".webm" else "video/mp4"
+    suffix = suffix.lower() if isinstance(suffix, str) else ""
+    if suffix not in VIDEO_MEDIA_TYPES:
+        raise HTTPException(
+            status_code=502,
+            detail={"code": "INVALID_VIDEO_CONTAINER", "message": "The provider returned an unsupported video container."},
+        )
+    if not isinstance(video_bytes, bytes) or not _looks_like_video_payload(video_bytes, suffix):
+        raise HTTPException(
+            status_code=502,
+            detail={"code": "INVALID_VIDEO_PAYLOAD", "message": "The provider output failed basic video-file validation."},
+        )
     return Response(
         content=video_bytes,
-        media_type=media_type,
+        media_type=VIDEO_MEDIA_TYPES[suffix],
         headers={"Content-Disposition": f'attachment; filename="nexus-generated{suffix}"'},
     )
 
