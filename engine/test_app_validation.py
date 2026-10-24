@@ -67,7 +67,7 @@ def test_generate_video_stays_unavailable_without_provider(monkeypatch):
         engine_app.generate_video(engine_app.GenerateRequest(prompt="cinematic scene"))
 
     assert exc.value.status_code == 503
-    assert exc.value.detail["detail"]["code"] == "VIDEO_ENGINE_NOT_CONFIGURED"
+    assert exc.value.detail["code"] == "VIDEO_ENGINE_NOT_CONFIGURED"
 
 
 class FakeResponse:
