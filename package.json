@@ -1,0 +1,8 @@
+{
+  "name": "nexus-video-studio",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:nexus": "node --test tests/nexus-core.test.js"
+  }
+}
