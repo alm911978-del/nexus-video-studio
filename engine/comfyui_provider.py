@@ -16,6 +16,20 @@ from typing import Any
 import httpx
 
 
+SUPPORTED_VIDEO_SUFFIXES = {".mp4", ".webm", ".mov", ".mkv"}
+
+
+def _looks_like_video_payload(content: bytes, suffix: str) -> bool:
+    """Check basic container signatures; this is a sanity check, not full media decoding."""
+    if not isinstance(content, bytes) or len(content) < 12:
+        return False
+    if suffix in {".mp4", ".mov"}:
+        return content[4:8] == b"ftyp"
+    if suffix in {".webm", ".mkv"}:
+        return content.startswith(bytes.fromhex("1A45DFA3"))
+    return False
+
+
 class ProviderNotConfigured(RuntimeError):
     pass
 
@@ -93,10 +107,14 @@ def generate_video(prompt: str, timeout_seconds: int = 240) -> tuple[bytes, str]
             for output in history.get("outputs", {}).values():
                 if not isinstance(output, dict):
                     continue
-                for field in ("videos", "gifs"):
-                    values = output.get(field, [])
-                    if isinstance(values, list):
-                        candidates.extend(item for item in values if isinstance(item, dict))
+                values = output.get("videos", [])
+                if isinstance(values, list):
+                    candidates.extend(
+                        item for item in values
+                        if isinstance(item, dict)
+                        and isinstance(item.get("filename"), str)
+                        and Path(item["filename"]).suffix.lower() in SUPPORTED_VIDEO_SUFFIXES
+                    )
             if not candidates:
                 raise ProviderGenerationError(
                     "The workflow completed but returned no video output. Check its video output node."
@@ -112,12 +130,14 @@ def generate_video(prompt: str, timeout_seconds: int = 240) -> tuple[bytes, str]
             }
             media = client.get(f"{base_url}/view", params=params)
             media.raise_for_status()
-            content_type = media.headers.get("content-type", "")
-            if not content_type.startswith("video/") and not filename.lower().endswith((".mp4", ".webm", ".mov", ".mkv")):
-                raise ProviderGenerationError("ComfyUI output does not appear to be a supported video.")
+            content_type = media.headers.get("content-type", "").split(";", 1)[0].strip().lower()
             suffix = Path(filename).suffix.lower()
-            if suffix not in {".mp4", ".webm", ".mov", ".mkv"}:
-                suffix = ".mp4"
+            if suffix not in SUPPORTED_VIDEO_SUFFIXES:
+                raise ProviderGenerationError("ComfyUI output has an unsupported video container.")
+            if content_type and not content_type.startswith("video/") and content_type != "application/octet-stream":
+                raise ProviderGenerationError("ComfyUI returned a non-video content type.")
+            if not _looks_like_video_payload(media.content, suffix):
+                raise ProviderGenerationError("ComfyUI output failed the basic video-container signature check.")
             return media.content, suffix
     except ProviderGenerationError:
         raise
