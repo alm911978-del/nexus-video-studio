@@ -56,6 +56,11 @@ describe("url-policy", () => {
     assert.equal(assertSafeHttpsAssetUrl("http://example.com/a").ok, false);
     assert.equal(assertSafeHttpsAssetUrl("https://user:pass@example.com/a").ok, false);
     assert.equal(assertSafeHttpsAssetUrl("https://127.0.0.1/a").ok, false);
+    assert.equal(assertSafeHttpsAssetUrl("https://192.168.1.1/a").ok, false);
+    assert.equal(assertSafeHttpsAssetUrl("https://169.254.169.254/latest/meta-data").ok, false);
+    assert.equal(assertSafeHttpsAssetUrl("https://[::1]/a").ok, false);
+    assert.equal(assertSafeHttpsAssetUrl("https://[fc00::1]/a").ok, false);
+    assert.equal(assertSafeHttpsAssetUrl("https://[fe80::1]/a").ok, false);
     assert.equal(assertSafeHttpsAssetUrl("https://example.com/a\u0000").ok, false);
   });
   it("checks origin allowlist", () => {
