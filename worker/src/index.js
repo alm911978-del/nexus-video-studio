@@ -157,7 +157,7 @@ export default {
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: systemInstruction(action) }] },
           contents: [{ role: "user", parts: [{ text: prompt.trim() }] }],
-          generationConfig: { temperature: 0.65, topP: 0.9, maxOutputTokens: 8192 }
+          generationConfig: { maxOutputTokens: 8192 }
         }),
         signal: AbortSignal.timeout(55_000)
       });
