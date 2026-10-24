@@ -23,6 +23,7 @@ test("health reports service metadata without exposing secrets", async () => {
   const body = await res.json();
   assert.equal(body.ok, true);
   assert.equal(body.model, "gemini-3.8-flash");
+  assert.deepEqual(body.providers, ["gemini", "groq", "openrouter", "mistral"]);
   assert.equal(JSON.stringify(body).includes("fake-test-key"), false);
 });
 
