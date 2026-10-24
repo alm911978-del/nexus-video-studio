@@ -218,7 +218,7 @@ function saveGeminiSettings(){
  if(endpoint){try{const u=new URL(endpoint);if(u.protocol!=='https:')throw Error()}catch(_){setGeminiStatus('أدخل رابط HTTPS صحيحًا لبوابة Worker.',true);return false}}
  geminiSettings={endpoint,siteKey};try{localStorage.setItem(GEMINI_SETTINGS_KEY,JSON.stringify(geminiSettings))}catch(_){}
  turnstileToken='';turnstileWidgetId=null;$('turnstileWidget').innerHTML='';
- if(siteKey)renderTurnstileWidget();
+ if(siteKey){renderTurnstileWidget();renderAssistantTurnstileWidget()}
  setGeminiStatus('تم حفظ إعدادات الاتصال محليًا. لم يتم حفظ أي مفتاح سري هنا.');
  return true;
 }
@@ -228,6 +228,7 @@ function loadTurnstileScript(){
  turnstileScriptRequested=true;
  const script=document.createElement('script');script.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';script.async=true;script.defer=true;
  script.onerror=()=>setGeminiStatus('تعذر تحميل Turnstile. تحقق من الاتصال بالإنترنت.',true);
+ script.onload=()=>{if(geminiSettings.siteKey){renderTurnstileWidget();renderAssistantTurnstileWidget()}};
  document.head.appendChild(script);return false;
 }
 function renderTurnstileWidget(){
