@@ -50,3 +50,9 @@ test("diagnostic UI inserts result text safely instead of rendering it as HTML",
   assert.match(i18n, /note\.textContent/);
   assert.match(i18n, /out\.replaceChildren\(\)/);
 });
+test("diagnostics controls have translations for supported languages", () => {
+  assert.match(i18n, /'تشغيل الفحص المحلي':'Run local diagnostics'/);
+  assert.match(i18n, /'نسخ تقرير الفحص':'Copier le rapport de diagnostic'/);
+  assert.match(i18n, /'تنزيل تقرير JSON':'Descargar informe JSON'/);
+});
+
