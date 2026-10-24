@@ -145,4 +145,18 @@ test("media pipeline rejects non-HTTPS URLs and URLs containing credentials", as
   assert.equal(insecure.status, "invalid-result");
   const credentialed = await runMediaJob({ providers: [provider("https://user:secret@media.example/video.mp4")], capability: "image-to-video" });
   assert.equal(credentialed.status, "unsafe-url");
+  const privateUrls = [
+    "https://localhost/video.mp4",
+    "https://127.0.0.1/video.mp4",
+    "https://10.0.0.1/video.mp4",
+    "https://192.168.1.10/video.mp4",
+    "https://169.254.169.254/latest/meta-data",
+    "https://[::1]/video.mp4",
+    "https://[fc00::1]/video.mp4",
+    "https://[fe80::1]/video.mp4"
+  ];
+  for (const url of privateUrls) {
+    const blocked = await runMediaJob({ providers: [provider(url)], capability: "image-to-video" });
+    assert.equal(blocked.status, "unsafe-url", "Should block private URL: " + url);
+  }
 });
