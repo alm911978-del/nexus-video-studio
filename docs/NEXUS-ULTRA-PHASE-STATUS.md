@@ -2,42 +2,64 @@
 
 ## Phase A — Inventory
 
-**Status:** COMPLETE (for currently reachable repositories)  
+**Status:** COMPLETE (reachable repositories)  
 **Date:** 2026-10-25  
-**Actor:** Grok (xAI) under Master Engineering Directive v1.0
+**Actor:** Grok
 
-### Findings
-- Only one repository is fully discoverable and writable: `alm911978-del/nexus-video-studio`.
-- Profile reports 2 public repositories; the second is currently not returned by search APIs → recorded as UNREACHABLE.
-- 10 branches present on the primary repo; 4 draft PRs still open; 3 recent PRs already merged (local access, brand, free LLM providers).
-- Core product is a static + Worker architecture. Video generation remains intentionally gated.
-
-### Deliverables produced
-- `docs/NEXUS-ULTRA-REPOSITORY-REGISTER.md` (this inventory)
-- Continuation of work on branch `grok/nexus-v5-unified-development` (orchestrator, media contract, FastAPI engine foundation already present from prior session)
-
-### Blockers recorded
-- Second public repository not visible → cannot inventory or develop it.
-- No private repositories visible to the current connector session.
-- Live video generation requires external provider + GPU/host; not available inside GitHub Pages or this connector alone.
+- Only one fully discoverable repo: `alm911978-del/nexus-video-studio`.
+- Second reported public repo remains UNREACHABLE to the connector.
+- Register: `docs/NEXUS-ULTRA-REPOSITORY-REGISTER.md`
 
 ---
 
-## Phase B — Protection (in progress)
+## Phase B — Protection
 
-- Working exclusively on feature branches.
-- No force-push, no deletion of existing history.
-- Secrets policy: none committed; placeholders only.
-- Open draft PRs left intact; unification proceeds on the Grok branch without overwriting other authors’ work.
+**Status:** IN PROGRESS / partial COMPLETE  
+
+- All new work on `grok/nexus-v5-unified-development`.
+- No force-push to `main`.
+- Added `SECURITY.md` with threat model, non-negotiable rules, CSP recommendations, Worker & engine controls.
+- Added client security modules:
+  - `src/nexus/security/sanitize.js`
+  - `src/nexus/security/url-policy.js`
+  - `src/nexus/security/headers.js`
+  - `src/nexus/security/index.js`
+- Added job lifecycle model: `src/nexus/jobs/job-model.js`
+- Architecture map: `docs/ARCHITECTURE.md`
+- Unit tests for security + jobs: `tests/nexus-security.test.js`
+
+**Not yet LIVE_VERIFIED:** CSP headers must be applied at Cloudflare / custom domain edge; Worker rate limits depend on your deploy.
 
 ---
 
-## Phase C — Baseline (next)
+## Phase C — Baseline
 
-- Capture current test surface of Worker and of the new `src/nexus/*` modules.
-- Record which tests can run without secrets / without external services.
-- Produce a baseline report before further functional expansion.
+**Status:** IN PROGRESS  
+
+- Orchestrator tests: `tests/nexus-orchestrator.test.js` (IMPLEMENTED)
+- Security tests: `tests/nexus-security.test.js` (IMPLEMENTED)
+- Core tests file present: `tests/nexus-core.test.js`
+- Worker gateway tests remain under `worker/test/`
+- CI workflows: `nexus-core-tests.yml`, `worker-tests.yml`
+
+Running `node --test` requires Node ≥ 20 in a checkout; connector session does not execute them here → status stays IMPLEMENTED until a CI run or local run is recorded.
 
 ---
 
-*Subsequent phase entries will be appended below.*
+## Phase D — Highest-value safe fixes (next)
+
+1. Wire security helpers into critical UI paths (escape on render, sanitize prompts before send).
+2. Record first successful CI run of the new test files.
+3. Diff open draft PRs for conflicts before any merge recommendation.
+4. Keep video generation gated behind explicit provider configuration.
+
+---
+
+## Honesty note on “thousands of lines”
+
+Useful modules, tests, and security documentation were added.  
+**Code is not inflated with empty repetition.** Volume grows only where it increases safety, testability, or real capability. Further expansion will follow the same rule.
+
+---
+
+*Append new phase entries below.*
