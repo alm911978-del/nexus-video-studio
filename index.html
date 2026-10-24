@@ -22,6 +22,8 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid
    <div id="authConfirmWrap"><label for="authConfirm">تأكيد كلمة المرور</label><input id="authConfirm" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="أعد كتابة كلمة المرور"></div>
    <button id="authSubmit" class="primary" type="submit">إنشاء حساب</button>
   </form>
+  <button id="authLocalMode" type="button" style="width:100%;margin-top:10px">المتابعة محليًا بدون حساب</button>
+  <p class="muted" style="font-size:12px">الوضع المحلي مجاني ولا يحتاج إلى حساب. تحفظ المشاريع على هذا المتصفح والجهاز فقط، ويمكنك تصدير نسخة احتياطية للاحتفاظ بها.</p>
   <div id="authRecoveryPanel" class="stack" style="margin-top:12px" hidden>
    <h3>تعيين كلمة مرور جديدة</h3>
    <p class="muted">أنشئ كلمة مرور جديدة لحسابك.</p>
@@ -130,7 +132,7 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid
 // Supabase Auth configuration. Replace these placeholders with your project's URL and PUBLIC publishable key.
 const SUPABASE_URL='YOUR_SUPABASE_PROJECT_URL';
 const SUPABASE_PUBLISHABLE_KEY='YOUR_SUPABASE_PUBLISHABLE_KEY';
-let supabaseClient=null, currentAuthUser=null, authMode='signup', authReady=false;
+let supabaseClient=null, currentAuthUser=null, authMode='signup', authReady=false, localMode=false;
 const emptyDB=()=>({projects:[],characters:[],scenes:[]});
 let db=emptyDB(), KEY='';
 const $=id=>document.getElementById(id);
@@ -149,14 +151,25 @@ function loadUserDB(userId){
  KEY='nexus-video-50-data:'+userId;db=emptyDB();
  try{const parsed=JSON.parse(localStorage.getItem(KEY)||'{}');db={projects:Array.isArray(parsed.projects)?parsed.projects:[],characters:Array.isArray(parsed.characters)?parsed.characters:[],scenes:Array.isArray(parsed.scenes)?parsed.scenes:[]}}catch(_){db=emptyDB()}
 }
-const save=()=>{try{if(!currentAuthUser||!KEY)return;localStorage.setItem(KEY,JSON.stringify(db))}catch(e){alert('تعذر الحفظ المحلي؛ صدّر نسخة احتياطية.')}};
+const save=()=>{try{if(!KEY)return;localStorage.setItem(KEY,JSON.stringify(db))}catch(e){alert('تعذر الحفظ المحلي؛ صدّر نسخة احتياطية.')}};
+function loadLocalDB(){
+ KEY='nexus-video-50-local-data';db=emptyDB();
+ try{const parsed=JSON.parse(localStorage.getItem(KEY)||'{}');db={projects:Array.isArray(parsed.projects)?parsed.projects:[],characters:Array.isArray(parsed.characters)?parsed.characters:[],scenes:Array.isArray(parsed.scenes)?parsed.scenes:[]}}catch(_){db=emptyDB()}
+}
 function showWorkspace(user){
  currentAuthUser=user||null;
- $('authGate').hidden=!!user;$('appWorkspace').hidden=!user;
- $('accountEmail').hidden=!user;$('accountEmail').textContent=user?.email||'';
- $('authLogout').hidden=!user;
- if(user){$('authConfigStatus').textContent='تم تسجيل الدخول: '+user.email;loadUserDB(user.id);render();}
- else{KEY='';db=emptyDB();}
+ if(user){
+  localMode=false;$('authGate').hidden=true;$('appWorkspace').hidden=false;
+  $('accountEmail').hidden=false;$('accountEmail').textContent=user.email||'';$('authLogout').hidden=false;
+  $('authConfigStatus').textContent='تم تسجيل الدخول: '+user.email;loadUserDB(user.id);render();return;
+ }
+ $('accountEmail').hidden=true;$('accountEmail').textContent='';$('authLogout').hidden=true;
+ if(localMode){
+  $('authGate').hidden=true;$('appWorkspace').hidden=false;
+  $('authConfigStatus').textContent='الوضع المحلي مفعّل؛ البيانات محفوظة في هذا المتصفح فقط.';
+  loadLocalDB();render();return;
+ }
+ $('authGate').hidden=false;$('appWorkspace').hidden=true;KEY='';db=emptyDB();
 }
 async function initializeAuth(){
  if(!configured()){$('authConfigStatus').textContent='غير مهيأة. أنشئ مشروع Supabase ثم ضع URL وPublishable key في ثوابت الإعداد أعلى السكربت.';$('appWorkspace').hidden=true;$('authGate').hidden=false;setAuthMode('signup');return}
@@ -192,6 +205,7 @@ $('authUpdatePassword').addEventListener('click',async()=>{
  }catch(error){authStatus(error.message||'تعذر تحديث كلمة المرور.',true)}
  finally{button.disabled=false}
 });
+$('authLocalMode').addEventListener('click',()=>{localMode=true;showWorkspace(null)});
 $('authModeSignup').addEventListener('click',()=>setAuthMode('signup'));
 $('authModeLogin').addEventListener('click',()=>setAuthMode('login'));
 $('authModeReset').addEventListener('click',()=>setAuthMode('reset'));
