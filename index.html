@@ -7,9 +7,26 @@
 :root{color-scheme:dark;--bg:#0d0f17;--panel:#151824;--line:#2a3042;--text:#f4f5fb;--muted:#a4abc0;--accent:#9b8cff;--mint:#5fe1c2}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% -20%,#252044 0,transparent 45%),var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif}
 button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid var(--line);background:#24283a;color:var(--text);border-radius:10px;padding:9px 13px}button.primary{background:var(--accent);color:#151226;border-color:transparent;font-weight:700}button.danger{color:#ff9eaa}input,textarea,select{width:100%;background:#0f121c;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px}textarea{min-height:90px;resize:vertical}label{display:block;color:var(--muted);font-size:13px;margin:8px 0 4px}.app{max-width:1100px;margin:auto;padding:16px 14px 42px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding:10px 0 18px;margin-bottom:18px}.brand{display:flex;align-items:center;gap:10px}.logo{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--mint));color:#111;font-weight:900}.muted,small{color:var(--muted)}.layout{display:grid;grid-template-columns:220px 1fr;gap:16px}.panel,.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px}.nav{display:grid;gap:8px;align-content:start}.nav button{text-align:right;background:transparent}.nav button.active{background:#292442;border-color:#5c4e94}.page{display:none}.page.active{display:block}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.stack{display:grid;gap:12px}.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.row>*{flex:1}.row button{flex:0 0 auto}.item{padding:12px;border:1px solid var(--line);border-radius:12px;margin-top:9px}.item h3{margin:0 0 4px;font-size:16px}.pill{display:inline-block;padding:3px 9px;border-radius:20px;background:#26233e;color:#c9bdff;font-size:12px}.notice{border:1px solid #514875;background:#1c1a2d;border-radius:12px;padding:12px;margin-bottom:14px}h1{font-size:clamp(23px,4vw,32px);margin:0}h2{font-size:20px;margin:0 0 10px}h3{font-size:16px}.empty{padding:18px;text-align:center;color:var(--muted)}.footer{margin-top:22px;color:var(--muted);font-size:12px}@media(max-width:700px){.layout{grid-template-columns:1fr}.nav{grid-template-columns:repeat(2,minmax(0,1fr))}.nav button{text-align:center}.app{padding:12px}}
-.chat-user{background:#292442;border:1px solid #514875;border-radius:14px;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere}.chat-assistant{background:#10131e;border:1px solid var(--line);border-radius:14px;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere}.chat-label{font-size:12px;color:var(--muted);margin-bottom:4px}.chat-error{color:#ffb0b8}.media-preview{display:block;max-width:100%;max-height:260px;margin-top:10px;border-radius:10px;background:#080a10}.media-card{min-width:0;overflow-wrap:anywhere}.media-meta{font-size:13px;color:var(--muted);white-space:pre-wrap}</style></head>
+.chat-user{background:#292442;border:1px solid #514875;border-radius:14px;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere}.chat-assistant{background:#10131e;border:1px solid var(--line);border-radius:14px;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere}.chat-label{font-size:12px;color:var(--muted);margin-bottom:4px}.chat-error{color:#ffb0b8}.media-preview{display:block;max-width:100%;max-height:260px;margin-top:10px;border-radius:10px;background:#080a10}.media-card{min-width:0;overflow-wrap:anywhere}.media-meta{font-size:13px;color:var(--muted);white-space:pre-wrap} .auth-shell{max-width:560px;margin:24px auto;padding:14px}.auth-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px}.auth-shell[hidden],#appWorkspace[hidden]{display:none!important}form button:disabled{opacity:.6;cursor:wait}
+</style></head>
 <body><main class="app">
-<header class="top"><div class="brand"><div class="logo">NΩ</div><div><h1>NEXUS VIDEO 5.0</h1><div class="muted">استوديو صناعة الأفلام بالذكاء الاصطناعي</div></div></div><label for="languageSwitcher" style="display:inline-block;margin:0 6px">اللغة / Language</label><select id="languageSwitcher" aria-label="Language" style="width:auto;min-width:125px"><option value="ar">العربية</option><option value="en">English</option><option value="fr">Français</option><option value="es">Español</option></select><span class="pill">Prototype 0.3 · محلي</span></header>
+<header class="top"><div class="brand"><div class="logo">NΩ</div><div><h1>NEXUS VIDEO 5.0</h1><div class="muted">استوديو صناعة الأفلام بالذكاء الاصطناعي</div></div></div><span id="accountEmail" class="pill" hidden></span><label for="languageSwitcher" style="display:inline-block;margin:0 6px">اللغة / Language</label><select id="languageSwitcher" aria-label="Language" style="width:auto;min-width:125px"><option value="ar">العربية</option><option value="en">English</option><option value="fr">Français</option><option value="es">Español</option></select><span class="pill">Prototype 0.3 · محلي</span></header>
+<section id="authGate" class="auth-shell">
+ <div class="auth-card">
+  <div class="brand"><div class="logo">NΩ</div><div><h2>NEXUS ACCOUNT</h2><div class="muted">حسابك الآمن في NEXUS VIDEO</div></div></div>
+  <div class="notice" style="margin-top:16px"><strong>حالة الإعداد:</strong> <span id="authConfigStatus">لم تُضبط خدمة الحسابات بعد.</span><p class="muted" style="margin-bottom:0">بعد إنشاء مشروع Supabase، أضف رابط المشروع ومفتاح Publishable العام في ثوابت الإعداد داخل index.html. لا تستخدم service_role أو أي مفتاح سري هنا.</p></div>
+  <div class="row"><button id="authModeSignup" class="primary" type="button">إنشاء حساب</button><button id="authModeLogin" type="button">تسجيل الدخول</button><button id="authModeReset" type="button">نسيت كلمة المرور؟</button></div>
+  <form id="authForm" class="stack" style="margin-top:12px">
+   <div><label for="authEmail">البريد الإلكتروني</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" required maxlength="254"></div>
+   <div id="authPasswordWrap"><label for="authPassword">كلمة المرور (8 أحرف على الأقل)</label><input id="authPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="اختر كلمة مرور قوية"></div>
+   <div id="authConfirmWrap"><label for="authConfirm">تأكيد كلمة المرور</label><input id="authConfirm" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="أعد كتابة كلمة المرور"></div>
+   <button id="authSubmit" class="primary" type="submit">إنشاء حساب</button>
+  </form>
+  <p id="authStatus" class="muted" role="status" aria-live="polite">لن تُرسل أي بيانات حتى تضبط الخدمة وتضغط زر الإرسال بنفسك.</p>
+  <p class="muted" style="font-size:12px">المشاريع في هذه النسخة تُحفظ محليًا في متصفحك لكل حساب على حدة؛ لم يُفعّل التخزين السحابي للمشاريع بعد.</p>
+ </div>
+</section>
+<div id="appWorkspace" hidden>
 <div class="notice"><strong>تنبيه الشفافية:</strong> إدارة المشاريع وكتابة ملفات التطوير تعمل محليًا. توليد الفيديو والصوت ومزامنة الشفاه غير موصولة. لا تستخدم مفاتيح API داخل الواجهة. تُحفظ البيانات في هذا المتصفح فقط.</div>
 <div class="layout"><nav class="panel nav" aria-label="التنقل"><button class="active" data-page="projects">المشاريع</button><button data-page="writer">كاتب المسلسلات</button><button data-page="assistant">NEXUS AI · المساعد العام</button><button data-page="characters">الشخصيات</button><button data-page="scenes">المشاهد</button><button data-page="backup">النسخ الاحتياطي</button><button data-page="media">مختبر الوسائط</button><button data-page="engine">حالة المحركات</button></nav>
 <div>
@@ -99,22 +116,78 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid
 </div>
 </section>
 <section id="engine" class="page"><h2>حالة المحركات</h2><div class="item"><h3>إدارة المشاريع والمشاهد</h3><span class="pill">متاح محليًا</span><p class="muted">الحفظ عبر localStorage في المتصفح الحالي.</p></div><div class="item"><h3>توليد الفيديو</h3><span class="pill">غير متصل</span><p class="muted">لا توجد واجهة API متصلة. يلزم اختيار مزود وتكوين الربط بشكل آمن.</p></div><div class="item"><h3>الصوت ومزامنة الشفاه</h3><span class="pill">غير متصل</span><p class="muted">غير متاحين في هذه النسخة.</p></div></section>
-</div></div><div class="footer">NEXUS Ω · نسخة تجريبية 0.3 · لا تضع مفاتيح API أو كلمات المرور داخل ملفات الواجهة.</div></main>
+</div></div></div><div class="footer">NEXUS Ω · نسخة تجريبية 0.3 · لا تضع مفاتيح API أو كلمات المرور داخل ملفات الواجهة.</div></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 <script>
-const KEY='nexus-video-50-data', LEGACY_KEY='nexus-video-57-data';
+// Supabase Auth configuration. Replace these placeholders with your project's URL and PUBLIC publishable key.
+const SUPABASE_URL='YOUR_SUPABASE_PROJECT_URL';
+const SUPABASE_PUBLISHABLE_KEY='YOUR_SUPABASE_PUBLISHABLE_KEY';
+let supabaseClient=null, currentAuthUser=null, authMode='signup', authReady=false;
 const emptyDB=()=>({projects:[],characters:[],scenes:[]});
-let db=emptyDB();
-try{
-  const current=localStorage.getItem(KEY);
-  const legacy=current?null:localStorage.getItem(LEGACY_KEY);
-  const parsed=JSON.parse(current||legacy||'{}');
-  db={projects:Array.isArray(parsed.projects)?parsed.projects:[],characters:Array.isArray(parsed.characters)?parsed.characters:[],scenes:Array.isArray(parsed.scenes)?parsed.scenes:[]};
-  if(!current&&legacy){localStorage.setItem(KEY,JSON.stringify(db));}
-}catch(e){db=emptyDB();}
-
-const $=id=>document.getElementById(id), save=()=>{try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){alert('تعذر الحفظ المحلي؛ صدّر نسخة احتياطية.')}};
+let db=emptyDB(), KEY='';
+const $=id=>document.getElementById(id);
+function authStatus(message,isError=false){const el=$('authStatus');if(el){el.textContent=message;el.style.color=isError?'#ff9eaa':''}}
+function configured(){return SUPABASE_URL.startsWith('https://')&&!SUPABASE_URL.includes('YOUR_')&&SUPABASE_PUBLISHABLE_KEY.length>20&&!SUPABASE_PUBLISHABLE_KEY.includes('YOUR_')}
+function setAuthMode(mode){
+ authMode=mode;
+ $('authModeSignup').classList.toggle('primary',mode==='signup');$('authModeLogin').classList.toggle('primary',mode==='login');$('authModeReset').classList.toggle('primary',mode==='reset');
+ $('authPasswordWrap').hidden=mode==='reset';$('authConfirmWrap').hidden=mode!=='signup';
+ $('authPassword').required=mode!=='reset';$('authConfirm').required=mode==='signup';
+ $('authPassword').autocomplete=mode==='login'?'current-password':'new-password';
+ $('authSubmit').textContent=mode==='signup'?'إنشاء حساب':mode==='login'?'تسجيل الدخول':'إرسال رابط الاستعادة';
+ authStatus(mode==='signup'?'أدخل بريدك وكلمة مرور قوية. ستحتاج إلى تأكيد البريد الإلكتروني.':mode==='login'?'سجّل الدخول بحسابك.':'سنرسل رابط استعادة إذا كان البريد مسجلًا.');
+}
+function loadUserDB(userId){
+ KEY='nexus-video-50-data:'+userId;db=emptyDB();
+ try{const parsed=JSON.parse(localStorage.getItem(KEY)||'{}');db={projects:Array.isArray(parsed.projects)?parsed.projects:[],characters:Array.isArray(parsed.characters)?parsed.characters:[],scenes:Array.isArray(parsed.scenes)?parsed.scenes:[]}}catch(_){db=emptyDB()}
+}
+const save=()=>{try{if(!currentAuthUser||!KEY)return;localStorage.setItem(KEY,JSON.stringify(db))}catch(e){alert('تعذر الحفظ المحلي؛ صدّر نسخة احتياطية.')}};
+function showWorkspace(user){
+ currentAuthUser=user||null;
+ $('authGate').hidden=!!user;$('appWorkspace').hidden=!user;
+ if(user){$('authConfigStatus').textContent='تم تسجيل الدخول: '+user.email;loadUserDB(user.id);render();}
+ else{KEY='';db=emptyDB();}
+}
+async function initializeAuth(){
+ if(!configured()){$('authConfigStatus').textContent='غير مهيأة. أنشئ مشروع Supabase ثم ضع URL وPublishable key في ثوابت الإعداد أعلى السكربت.';$('appWorkspace').hidden=true;$('authGate').hidden=false;setAuthMode('signup');return}
+ if(!window.supabase||!window.supabase.createClient){$('authConfigStatus').textContent='تعذر تحميل مكتبة المصادقة. تحقق من اتصال الإنترنت.';authStatus('لم يتم تحميل مكتبة Supabase؛ لم تُرسل أي بيانات.',true);return}
+ supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+ const {data,error}=await supabaseClient.auth.getSession();
+ if(error){authStatus('تعذر التحقق من الجلسة: '+error.message,true);return}
+ showWorkspace(data.session?.user||null);authReady=true;
+ supabaseClient.auth.onAuthStateChange((_event,session)=>{showWorkspace(session?.user||null)});
+ if(!currentAuthUser)authStatus('أدخل بيانات حسابك. لن تُرسل إلا عند الضغط على زر الإرسال.');
+}
+$('authModeSignup').addEventListener('click',()=>setAuthMode('signup'));
+$('authModeLogin').addEventListener('click',()=>setAuthMode('login'));
+$('authModeReset').addEventListener('click',()=>setAuthMode('reset'));
+$('authForm').addEventListener('submit',async event=>{
+ event.preventDefault();
+ if(!configured()||!supabaseClient){authStatus('المصادقة غير مهيأة بعد. اتبع خطوات إعداد Supabase أولًا.',true);return}
+ const email=$('authEmail').value.trim(),password=$('authPassword').value,confirmPassword=$('authConfirm').value;
+ if(!email){authStatus('أدخل بريدًا إلكترونيًا صالحًا.',true);return}
+ if(authMode!=='reset'&&password.length<8){authStatus('استخدم كلمة مرور من 8 أحرف على الأقل.',true);return}
+ if(authMode==='signup'&&password!==confirmPassword){authStatus('كلمتا المرور غير متطابقتين.',true);return}
+ const button=$('authSubmit');button.disabled=true;
+ try{
+  let result;
+  if(authMode==='signup')result=await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin+window.location.pathname}});
+  else if(authMode==='login')result=await supabaseClient.auth.signInWithPassword({email,password});
+  else result=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname});
+  if(result.error)throw result.error;
+  if(authMode==='signup'){authStatus('إذا كان التسجيل مقبولًا، افتح بريدك واضغط رابط التأكيد ثم ارجع إلى الموقع.')}
+  else if(authMode==='login'){authStatus('تم تسجيل الدخول.');showWorkspace(result.data.user||result.data.session?.user||null)}
+  else authStatus('إذا كان البريد مسجلًا، فستصلك رسالة لاستعادة كلمة المرور.');
+ }catch(error){authStatus(error.message||'تعذر إكمال العملية. حاول مجددًا.',true)}
+ finally{button.disabled=false}
+});
+const logoutButton=document.createElement('button');logoutButton.id='authLogout';logoutButton.textContent='تسجيل الخروج';logoutButton.hidden=true;logoutButton.addEventListener('click',async()=>{if(supabaseClient){const {error}=await supabaseClient.auth.signOut();if(error)authStatus(error.message,true);else showWorkspace(null)}});
 const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+$('authModeSignup').addEventListener('click',()=>setAuthMode('signup'));
+$('authModeLogin').addEventListener('click',()=>setAuthMode('login'));
+$('authModeReset').addEventListener('click',()=>setAuthMode('reset'));
+
 function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function empty(msg){return '<div class="empty">'+msg+'</div>'}
 function render(){
@@ -388,5 +461,5 @@ function srtTime(seconds){const ms=Math.round(seconds*1000),h=Math.floor(ms/3600
 $('makeSrt').addEventListener('click',()=>{const lines=$('subtitleLines').value.split(/\r?\n/).map(line=>line.trim()).filter(Boolean);const seconds=Number($('subtitleSeconds').value);if(!lines.length){$('subtitleOutput').value='';$('mediaStatus').textContent='أدخل سطر ترجمة واحدًا على الأقل.';return}if(!Number.isInteger(seconds)||seconds<1||seconds>30){$('mediaStatus').textContent='اختر مدة صحيحة بين 1 و30 ثانية.';return}$('subtitleOutput').value=lines.map((line,i)=>(i+1)+'\n'+srtTime(i*seconds)+' --> '+srtTime((i+1)*seconds)+'\n'+line).join('\n\n')+'\n';$('mediaStatus').textContent='تم إنشاء '+lines.length+' بطاقة SRT محليًا.'});
 $('downloadSrt').addEventListener('click',()=>{const value=$('subtitleOutput').value;if(!value.trim()){$('mediaStatus').textContent='أنشئ الترجمة أولًا قبل التنزيل.';return}const blob=new Blob([value],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='nexus-subtitles.srt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
 window.addEventListener('beforeunload',()=>mediaObjectUrls.forEach(url=>URL.revokeObjectURL(url)));
-render();
+initializeAuth();
 </script><script src="./i18n.js" defer></script></body></html>
