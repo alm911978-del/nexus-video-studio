@@ -79,14 +79,15 @@ test("fails closed if required secrets or rate-limit binding are missing", async
   assert.equal(res.status, 503);
 });
 
-test("NEXUS Ω dashboard states capability boundaries without claiming connected engines", () => {
+test("NEXUS Ω dashboard reports honest video, gateway, and cloud status", () => {
   const scriptPath = fileURLToPath(new URL("../../i18n.js", import.meta.url));
   const source = readFileSync(scriptPath, "utf8");
-  assert.match(source, /خارطة القدرات والتوصيلات/);
-  assert.match(source, /الأدوات المتصلة بحساب ChatGPT لا تصبح تلقائيًا جزءًا من الموقع/);
-  assert.match(source, /الموقع لا يولّد مقطعًا حقيقيًا حاليًا/);
-  assert.match(source, /لا يوجد مشروع Supabase متصل حاليًا/);
-  assert.match(source, /اتصال GitHub في ChatGPT لا يمنح صفحة الويب صلاحية مباشرة/);
+  assert.match(source, /توليد الفيديو والصوت/);
+  assert.match(source, /غير موصول تلقائيًا/);
+  assert.match(source, /إعداد البرومبت لا يعني أن فيديو أو صوتًا تم توليده/);
+  assert.match(source, /يلزم Worker منشور وإعداد Turnstile ومفتاح خادم آمن/);
+  assert.match(source, /Supabase غير متصل ما لم تضبط إعداداته وتختبر تسجيل الدخول/);
+  assert.match(source, /لا نعلن نجاح أي ربط قبل اختبار حقيقي/);
 });
 
 test("published HTML inline JavaScript parses and includes secure Gemini controls", () => {
