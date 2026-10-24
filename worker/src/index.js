@@ -116,7 +116,7 @@ export default {
     if (!origin) return json({ error: "Origin not allowed." }, 403);
     const url = new URL(request.url);
     if (request.method === "GET" && url.pathname === "/api/health") {
-      return response({ ok: true, service: "NEXUS Gemini Gateway", model: MODEL, auth: "turnstile-required" }, 200, origin);
+      return response({ ok: true, service: "NEXUS AI Gateway", model: MODEL, providers: Object.keys(PROVIDERS), auth: "turnstile-required" }, 200, origin);
     }
     if (request.method !== "POST" || url.pathname !== "/api/generate") {
       return response({ error: "Not found." }, 404, origin);
