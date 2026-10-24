@@ -114,3 +114,17 @@ test("enforces daily IP rate limit after successful Turnstile verification", asy
     globalThis.fetch = originalFetch;
   }
 });
+
+test("static media lab exposes local-only media inspection and SRT export controls", () => {
+  const htmlPath = fileURLToPath(new URL("../../index.html", import.meta.url));
+  const html = readFileSync(htmlPath, "utf8");
+  assert.match(html, /id="mediaFiles"[^>]*accept="image\/\*,video\/\*,audio\/\*"/);
+  assert.match(html, /id="mediaResults"/);
+  assert.match(html, /id="exportMediaReport"/);
+  assert.match(html, /id="subtitleLines"/);
+  assert.match(html, /id="makeSrt"/);
+  assert.match(html, /id="downloadSrt"/);
+  assert.match(html, /URL\.createObjectURL\(file\)/);
+  assert.match(html, /processing:'local-browser-only',uploaded:false/);
+  assert.match(html, /function srtTime\(seconds\)/);
+});
