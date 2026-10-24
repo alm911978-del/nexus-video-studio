@@ -8,4 +8,53 @@ const original=new WeakMap();
 function apply(){const select=document.getElementById('languageSwitcher');if(!select)return;const lang=select.value;document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';const map=dict[lang]||{};const walker=document.createTreeWalker(document.querySelector('.app'),NodeFilter.SHOW_TEXT);let n;while(n=walker.nextNode()){if(!original.has(n))original.set(n,n.nodeValue);const source=original.get(n),trim=source.trim();if(!trim)continue;const translated=lang==='ar'?source:(map[trim]?source.replace(trim,map[trim]):source);if(n.nodeValue!==translated)n.nodeValue=translated;}try{localStorage.setItem('nexus-video-language-v1',lang)}catch(e){}}
 const init=()=>{const s=document.getElementById('languageSwitcher');if(!s)return;try{s.value=localStorage.getItem('nexus-video-language-v1')||'ar'}catch(e){}s.addEventListener('change',apply);apply();new MutationObserver(()=>apply()).observe(document.querySelector('.app'),{childList:true,subtree:true});};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+/* NEXUS VIDEO 5.0 visual layer + honest system dashboard */
+function enhanceNexus(){
+ const app=document.querySelector('.app'), nav=document.querySelector('.nav'), layout=document.querySelector('.layout'), content=layout&&layout.querySelector(':scope > div');
+ if(!app||!nav||!content||document.getElementById('nexus-dashboard'))return;
+ const css=document.createElement('link');css.rel='stylesheet';css.href='./assets/nexus-brand.css';document.head.appendChild(css);
+ document.querySelectorAll('.brand .logo').forEach(el=>{if(el.querySelector('img'))return;el.replaceChildren();const img=document.createElement('img');img.src='./assets/nexus-mark.svg';img.alt='NEXUS VIDEO logo';img.width=52;img.height=52;el.appendChild(img);});
+ const addNav=(id,label)=>{const b=document.createElement('button');b.type='button';b.dataset.page=id;b.textContent=label;b.dataset.nexusAdded='true';nav.appendChild(b);return b;};
+ const dashboardNav=addNav('nexus-dashboard','NEXUS Ω · مركز النظام');
+ const communityNav=addNav('nexus-community','المجتمع والرسائل');
+ const panel=(id,html)=>{const s=document.createElement('section');s.id=id;s.className='page';s.innerHTML=html;content.appendChild(s);return s;};
+ panel('nexus-dashboard',`
+  <div class="nexus-hero"><div class="brand-kicker">NEXUS Ω · CONTROL CENTER</div><h2 style="font-size:26px;margin:6px 0">مركز النظام والتحقق</h2><p class="muted" style="max-width:650px;margin-bottom:0">لوحة متابعة واضحة: نعرض ما يمكن فحصه محليًا، ونميّز الخدمات التي تحتاج إعدادًا أو اتصالًا فعليًا.</p></div>
+  <div class="status-grid">
+   <div class="status-tile"><div class="muted">الاستوديو المحلي</div><h3><span class="status-dot ok"></span>وظائف المتصفح</h3><small>المشاريع والشخصيات والمشاهد والنسخ الاحتياطي محلية على هذا الجهاز.</small></div>
+   <div class="status-tile"><div class="muted">توليد الفيديو والصوت</div><h3><span class="status-dot pending"></span>غير موصول تلقائيًا</h3><small>إعداد البرومبت لا يعني أن فيديو أو صوتًا تم توليده.</small></div>
+   <div class="status-tile"><div class="muted">بوابة Gemini</div><h3><span class="status-dot pending"></span>تحتاج فحص اتصال</h3><small>يلزم Worker منشور وإعداد Turnstile ومفتاح خادم آمن.</small></div>
+   <div class="status-tile"><div class="muted">الحسابات والسحابة</div><h3><span class="status-dot pending"></span>غير مهيأة افتراضيًا</h3><small>Supabase غير متصل ما لم تضبط إعداداته وتختبر تسجيل الدخول.</small></div>
+  </div>
+  <div class="card stack"><h3>فحص محلي سريع</h3><p class="muted">يفحص عناصر الواجهة الأساسية وإمكانية الوصول إلى التخزين المحلي، ولا يتصل بخدمات خارجية ولا يستهلك أرصدة.</p><div class="row"><button id="nexus-run-audit" class="primary" type="button">تشغيل الفحص المحلي</button><button id="nexus-open-backup" type="button">فتح النسخ الاحتياطي</button></div><div id="nexus-audit-results" class="stack" aria-live="polite"><div class="item muted">لم يُشغّل الفحص بعد.</div></div></div>
+  <div class="card stack"><h3>مبادئ NEXUS Ω</h3><ul><li>لا نعلن نجاح أي ربط قبل اختبار حقيقي.</li><li>لا نضع مفاتيح API السرية داخل الواجهة العامة.</li><li>لا ننشئ موارد مدفوعة أو نستهلك أرصدة دون حاجة.</li><li>صدّر نسخة احتياطية قبل مسح بيانات المتصفح أو تغيير الجهاز.</li></ul></div>
+ `);
+ panel('nexus-community',`
+  <div class="nexus-hero"><div class="brand-kicker">NEXUS COMMUNITY</div><h2 style="font-size:26px;margin:6px 0">المجتمع والمحادثات الخاصة</h2><p class="muted" style="margin-bottom:0">واجهة توضيحية لحالة التطوير؛ لا توجد رسائل مشتركة فعّالة قبل إعداد الخادم.</p></div>
+  <div class="notice"><strong>الحالة الحالية:</strong> لا يوجد مشروع Supabase متصل في الوقت الحالي. لن نعرض رسائل وهمية على أنها رسائل حقيقية.</div>
+  <div class="grid"><div class="card"><h3>المجتمع العام</h3><p class="muted">منشورات وردود وإبلاغ وإشراف للأعضاء المسجلين. يحتاج إلى مصادقة وقاعدة بيانات وسياسات RLS.</p><span class="pill">بانتظار الإعداد</span></div><div class="card"><h3>المحادثات الخاصة</h3><p class="muted">مراسلة طرفين مع حماية قراءة الرسائل للمشاركين فقط. يحتاج إلى اختبارات صلاحيات قبل تفعيله.</p><span class="pill">غير مفعّلة</span></div></div>
+ `);
+ const switchPage=(id)=>{
+  const target=document.getElementById(id);if(!target)return;
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p===target));
+  nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+  if(id==='nexus-dashboard')runAudit();
+ };
+ [dashboardNav,communityNav].forEach(b=>b.addEventListener('click',()=>switchPage(b.dataset.page)));
+ document.getElementById('nexus-open-backup').addEventListener('click',()=>switchPage('backup'));
+ function runAudit(){
+  const out=document.getElementById('nexus-audit-results');if(!out)return;
+  const ids=['projects','writer','assistant','characters','scenes','backup','media','engine'];
+  const checks=ids.map(id=>({label:'واجهة '+id,ok:!!document.getElementById(id)}));
+  checks.push({label:'زر الدخول المحلي موجود',ok:!!document.getElementById('authLocalMode')});
+  let storageOk=false;try{const k='nexus-v5-audit-probe';localStorage.setItem(k,'1');storageOk=localStorage.getItem(k)==='1';localStorage.removeItem(k)}catch(e){}
+  checks.push({label:'التخزين المحلي متاح',ok:storageOk});
+  out.replaceChildren();
+  checks.forEach(c=>{const row=document.createElement('div');row.className='item';const strong=document.createElement('strong');strong.textContent=(c.ok?'✓ ':'! ')+c.label;strong.style.color=c.ok?'#72f0db':'#e8c77a';const note=document.createElement('div');note.className='muted';note.textContent=c.ok?'اجتاز الفحص المحلي.':'لم يجتز الفحص؛ قد يكون المتصفح يمنع هذه الوظيفة.';row.append(strong,note);out.appendChild(row)});
+  const summary=document.createElement('p');summary.className='muted';summary.textContent='النتيجة: '+checks.filter(c=>c.ok).length+' / '+checks.length+' فحوص محلية ناجحة. هذا ليس اختبارًا للخدمات السحابية أو لتوليد الوسائط.';out.appendChild(summary);
+ }
+ document.getElementById('nexus-run-audit').addEventListener('click',runAudit);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enhanceNexus,{once:true});else enhanceNexus();
+
 })();
