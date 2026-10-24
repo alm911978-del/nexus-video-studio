@@ -30,12 +30,12 @@ npx wrangler deploy
 When prompted for each secret, paste it only into the terminal prompt. Do not put it in a source file, commit, screenshot, or chat. `.dev.vars*` and `.env*` are ignored by Git.
 
 5. Copy the deployed Worker URL (for example `https://nexus-gemini-gateway.<your-subdomain>.workers.dev`).
-6. Open the NEXUS site → **كاتب المسلسلات** → **إعداد اتصال Gemini الآمن**. Enter the Worker URL and the public Turnstile site key, save, then run the connection test.
+6. Open the NEXUS site → **كاتب المسلسلات** → **إعداد اتصال Gemini الآمن**. Select the provider, enter the Worker URL and public Turnstile site key, save, then run the connection test. Configure only the secret for the provider you intend to use; Gemini continues to use `GEMINI_API_KEY`.
 7. Complete Turnstile and click **توليد بالذكاء الاصطناعي**.
 
 ## Endpoints
 - `GET /api/health`: public health metadata, no secrets.
-- `POST /api/generate`: accepts `{ "action": "series|episode|continuity|scene-prompt", "prompt": "...", "turnstileToken": "..." }`.
+- `POST /api/generate`: accepts `{ "action": "series|episode|continuity|scene-prompt|general", "provider": "gemini|groq|openrouter|mistral", "prompt": "...", "turnstileToken": "..." }`. If omitted, `provider` defaults to `gemini`.
 - The provider and model are allowlisted server-side; client input cannot choose arbitrary URLs or model IDs. Gemini uses `gemini-3.8-flash`; Groq uses `openai/gpt-oss-120b`; OpenRouter uses `openrouter/free`; Mistral uses `mistral-small-latest`. The selected provider must have its corresponding secret configured in Cloudflare.
 
 ## Security controls
