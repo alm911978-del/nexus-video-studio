@@ -141,3 +141,45 @@ test("backup import validates record shapes and rendered IDs are HTML-escaped", 
   assert.match(html, /item\.id\.length<=128/);
   assert.match(html, /لم يتم استبدال بياناتك/);
 });
+
+test("Gemini 3.8 generation request uses supported parameters and returns model text", async () => {
+  const originalFetch = globalThis.fetch;
+  const upstreamCalls = [];
+  globalThis.fetch = async (url, options = {}) => {
+    const target = String(url);
+    upstreamCalls.push(target);
+    if (target.includes("challenges.cloudflare.com/turnstile/v0/siteverify")) {
+      return new Response(JSON.stringify({ success: true, hostname: "alm911978-del.github.io" }), {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      });
+    }
+    if (target.includes("generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent")) {
+      const payload = JSON.parse(options.body);
+      assert.equal(payload.generationConfig.maxOutputTokens, 8192);
+      assert.equal(Object.hasOwn(payload.generationConfig, "temperature"), false);
+      assert.equal(Object.hasOwn(payload.generationConfig, "topP"), false);
+      assert.equal(options.headers["x-goog-api-key"], "fake-test-key");
+      return new Response(JSON.stringify({
+        candidates: [{ content: { parts: [{ text: "NEXUS_TEST_OK" }] } }],
+        usageMetadata: { promptTokenCount: 1, candidatesTokenCount: 1 }
+      }), { status: 200, headers: { "content-type": "application/json" } });
+    }
+    throw new Error("Unexpected outbound request");
+  };
+  try {
+    const res = await worker.fetch(req("/api/generate", {
+      method: "POST",
+      body: JSON.stringify({ action: "series", prompt: "test", turnstileToken: "valid-token" }),
+      headers: { "content-type": "application/json" }
+    }), env);
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.ok, true);
+    assert.equal(body.model, "gemini-3.8-flash");
+    assert.equal(body.text, "NEXUS_TEST_OK");
+    assert.equal(upstreamCalls.length, 2);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
