@@ -21,10 +21,11 @@ This file tracks real integration status. A tool is **not connected** just becau
 
 ## Verification record
 
-- **2026-10-24 — GitHub Actions:** `NEXUS Worker Tests` passed on commit `8158e4ddb0f354c47e821556c75e761139c40949` (run: https://github.com/alm911978-del/nexus-video-studio/actions/runs/40049125035). The workflow ran `npm test` using Node.js 20.
-- The suite checks the media lab/SRT controls, validates backup-import safeguards and escaped record IDs, and mocks a successful Gemini 3.8 request to verify the request payload and response handling.
-- The mocked test confirms the gateway code path and request shape, **not** a live Gemini API call or a deployed Cloudflare Worker. The Gemini integration still requires deployment, correct secrets/bindings, and a real end-to-end smoke test.
-- GitHub Pages deployment had succeeded on the previous commit; the latest Pages deployment for the security fixes was still running at the time of this update. A successful Pages build does not prove every interactive feature works in a live browser.
+- **2026-10-24 — GitHub Actions:** `NEXUS Worker Tests` passed on commit `f45e8eab0ca75fb00b3b8826500d97862b603c7a` (run: https://github.com/alm911978-del/nexus-video-studio/actions/runs/40051308947). The workflow ran `npm test` using Node.js 20.
+- The suite checks the media lab/SRT controls, backup-import safeguards, escaped record IDs, consistent prototype-version labels, and a mocked successful Gemini 3.8 request.
+- **2026-10-24 — Published-site browser smoke test:** confirmed the live page title is `NEXUS VIDEO 5.0 — الاستوديو`, the footer shows prototype `0.3`, the local series-development template generated non-empty output, and two Arabic subtitle lines produced valid sequential SRT timestamps. No real media file was uploaded and no Gemini request was sent.
+- **2026-10-24 — GitHub Pages:** latest deployment completed successfully for commit `f45e8eab0ca75fb00b3b8826500d97862b603c7a` (run: https://github.com/alm911978-del/nexus-video-studio/actions/runs/40051308735).
+- The Gemini test uses a mocked upstream response; it confirms the gateway code path and request shape, **not** a live Gemini API call or a deployed Cloudflare Worker. The Gemini integration still requires deployment, correct secrets/bindings, and a real end-to-end smoke test. A successful Pages deployment does not prove every interactive feature works in a live browser.
 
 ## Safety and cost principles
 
