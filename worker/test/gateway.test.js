@@ -183,3 +183,12 @@ test("Gemini 3.8 generation request uses supported parameters and returns model 
     globalThis.fetch = originalFetch;
   }
 });
+
+test("NEXUS prototype version labels are consistent", () => {
+  const htmlPath = fileURLToPath(new URL("../../index.html", import.meta.url));
+  const html = readFileSync(htmlPath, "utf8");
+  assert.match(html, /<title>NEXUS VIDEO 5\\.0 — الاستوديو<\\/title>/);
+  assert.match(html, /Prototype 0\\.3 · محلي/);
+  assert.match(html, /نسخة تجريبية 0\\.3/);
+  assert.doesNotMatch(html, /Prototype 0\\.2|نسخة تجريبية 0\\.1/);
+});
