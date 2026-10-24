@@ -1,10 +1,10 @@
-# NEXUS Gemini Gateway
+# NEXUS AI Gateway — Gemini and Free LLM Providers
 
-Cloudflare Worker proxy for NEXUS VIDEO → Gemini. The Gemini API key stays in a server-side secret, never in the static website.
+Cloudflare Worker proxy for NEXUS VIDEO. Choose Gemini, Groq, OpenRouter free models, or Mistral from the website. Provider API keys stay in server-side Cloudflare Worker secrets, never in the static website.
 
 ## Requirements
 - Free Cloudflare account (subject to current plan and quota).
-- Gemini API key with API access enabled.
+- At least one provider API key: `GEMINI_API_KEY`, `GROQ_API_KEY`, `OPENROUTER_API_KEY`, or `MISTRAL_API_KEY`. Free tiers and model availability are controlled by each provider and can change.
 - Cloudflare Turnstile site key + secret key for hostname `alm911978-del.github.io`.
 - Cloudflare KV namespace for rate-limit counters.
 - Node.js + npm, and Wrangler CLI (or `npx wrangler`).
@@ -18,7 +18,10 @@ Cloudflare Worker proxy for NEXUS VIDEO → Gemini. The Gemini API key stays in 
 ```bash
 npm install
 npx wrangler login
-npx wrangler secret put GEMINI_API_KEY
+npx wrangler secret put GEMINI_API_KEY       # optional if using another provider
+npx wrangler secret put GROQ_API_KEY          # optional
+npx wrangler secret put OPENROUTER_API_KEY    # optional
+npx wrangler secret put MISTRAL_API_KEY       # optional
 npx wrangler secret put TURNSTILE_SECRET_KEY
 npm test
 npx wrangler deploy
@@ -33,7 +36,7 @@ When prompted for each secret, paste it only into the terminal prompt. Do not pu
 ## Endpoints
 - `GET /api/health`: public health metadata, no secrets.
 - `POST /api/generate`: accepts `{ "action": "series|episode|continuity|scene-prompt", "prompt": "...", "turnstileToken": "..." }`.
-- The model is fixed server-side to `gemini-3.8-flash`; client input cannot choose arbitrary URLs or models.
+- The provider and model are allowlisted server-side; client input cannot choose arbitrary URLs or model IDs. Gemini uses `gemini-3.8-flash`; Groq uses `openai/gpt-oss-120b`; OpenRouter uses `openrouter/free`; Mistral uses `mistral-small-latest`. The selected provider must have its corresponding secret configured in Cloudflare.
 
 ## Security controls
 - Exact Origin allowlist; CORS preflight handling.
@@ -41,7 +44,7 @@ When prompted for each secret, paste it only into the terminal prompt. Do not pu
 - 20 KB maximum body and 12,000-character prompt limit.
 - Turnstile server-side verification and optional hostname check.
 - Daily IP-based request cap using KV (best-effort; simultaneous requests may race).
-- Server-only Gemini secret; fixed model and fixed task system instructions.
+- Server-only provider secrets; fixed provider endpoints/models and fixed task system instructions.
 - Upstream timeout, no-store responses, generic upstream errors, no prompt/key logging.
 - Rejects requests if required secrets or KV binding are missing.
 

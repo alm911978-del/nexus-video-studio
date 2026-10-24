@@ -56,15 +56,16 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid
 <div class="row"><button class="primary" id="buildWriter">إنشاء ملف تطوير المسلسل</button><button class="primary" id="generateGemini">توليد بالذكاء الاصطناعي</button><button id="copyWriter">نسخ النتيجة</button><button id="downloadWriter">تصدير TXT</button></div>
 <details class="card" style="margin-top:12px"><summary>إعداد اتصال Gemini الآمن</summary>
 <p class="muted">أدخل رابط Cloudflare Worker بعد نشره، ومفتاح الموقع العام لـ Turnstile. لا تدخل المفتاح السري هنا؛ يُحفظ فقط في Cloudflare Secrets.</p>
-<label>رابط بوابة Gemini (Worker URL)</label><input id="geminiEndpoint" type="url" placeholder="https://nexus-gemini-gateway.اسمك.workers.dev">
+<label>مزود الذكاء الاصطناعي (يُضبط مفتاحه السري في Cloudflare)</label><select id="llmProvider"><option value="gemini">Google Gemini</option><option value="groq">Groq — مجاني بحسب الحصة</option><option value="openrouter">OpenRouter — النماذج المجانية</option><option value="mistral">Mistral — الخطة المجانية المتاحة</option></select>
+<label>رابط بوابة NEXUS Worker</label><input id="geminiEndpoint" type="url" placeholder="https://nexus-gemini-gateway.اسمك.workers.dev">
 <label>Turnstile Site Key (مفتاح الموقع العام)</label><input id="turnstileSiteKey" placeholder="0x4AAAA...">
 <div class="row"><button id="saveGeminiSettings">حفظ الإعدادات</button><button id="checkGeminiGateway">اختبار اتصال البوابة</button></div>
 <div id="turnstileWidget" style="margin-top:12px"></div>
-<p id="geminiStatus" class="muted" role="status" aria-live="polite">البوابة غير مضبوطة بعد. راجع مجلد worker في المستودع.</p>
+<p id="geminiStatus" class="muted" role="status" aria-live="polite">البوابة غير مضبوطة بعد. اختر المزود ثم راجع دليل إعداد مزودي LLM المجانيين في مجلد worker.</p>
 <label>نوع المهمة</label><select id="geminiAction"><option value="series">تطوير مسلسل كامل</option><option value="episode">كتابة حلقة</option><option value="continuity">تدقيق الاستمرارية</option><option value="scene-prompt">صياغة Prompt لمشهد</option></select>
 </details>
 <label>ملف التطوير / الطلب الجاهز</label><textarea id="wOutput" style="min-height:300px" placeholder="سيظهر هنا طلب احترافي متكامل لتطوير المسلسل..." readonly></textarea>
-<p class="muted">الحماية: مفتاح Gemini يبقى في Cloudflare، مع تحقق Turnstile وحدّ يومي حسب عنوان IP وفحص مدخلات الطلب. إعداد البوابة ونشرها مطلوبان مرة واحدة قبل أول توليد.</p>
+<p class="muted">الحماية: مفاتيح مزودي الذكاء الاصطناعي تبقى في Cloudflare Secrets، مع تحقق Turnstile وحدّ يومي حسب عنوان IP وفحص مدخلات الطلب. إعداد البوابة ونشرها مطلوبان مرة واحدة قبل أول توليد.</p>
 </div>
 </section>
 <section id="assistant" class="page">
@@ -326,14 +327,14 @@ $('copyWriter').onclick=async()=>{const v=$('wOutput').value||buildWriterPrompt(
 $('downloadWriter').onclick=()=>{const v=$('wOutput').value||buildWriterPrompt();if(!v)return;$('wOutput').value=v;const blob=new Blob([v],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='NEXUS-series-development.txt';a.click();URL.revokeObjectURL(a.href)};
 
 const GEMINI_SETTINGS_KEY='nexus-gemini-settings-v1';
-let geminiSettings={endpoint:'',siteKey:''},turnstileToken='',turnstileWidgetId=null,turnstileScriptRequested=false;
+let geminiSettings={endpoint:'',siteKey:'',provider:'gemini'},turnstileToken='',turnstileWidgetId=null,turnstileScriptRequested=false;
 try{geminiSettings={...geminiSettings,...JSON.parse(localStorage.getItem(GEMINI_SETTINGS_KEY)||'{}')}}catch(_){}
 function setGeminiStatus(message,isError=false){const el=$('geminiStatus');if(el){el.textContent=message;el.style.color=isError?'#b91c1c':''}}
 function normalizeEndpoint(value){return String(value||'').trim().replace(/\/+$/,'')}
 function saveGeminiSettings(){
  const endpoint=normalizeEndpoint($('geminiEndpoint').value),siteKey=$('turnstileSiteKey').value.trim();
  if(endpoint){try{const u=new URL(endpoint);if(u.protocol!=='https:')throw Error()}catch(_){setGeminiStatus('أدخل رابط HTTPS صحيحًا لبوابة Worker.',true);return false}}
- geminiSettings={endpoint,siteKey};try{localStorage.setItem(GEMINI_SETTINGS_KEY,JSON.stringify(geminiSettings))}catch(_){}
+ geminiSettings={endpoint,siteKey,provider:$('llmProvider').value||'gemini'};try{localStorage.setItem(GEMINI_SETTINGS_KEY,JSON.stringify(geminiSettings))}catch(_){}
  turnstileToken='';turnstileWidgetId=null;$('turnstileWidget').innerHTML='';
  if(siteKey){renderTurnstileWidget();renderAssistantTurnstileWidget()}
  setGeminiStatus('تم حفظ إعدادات الاتصال محليًا. لم يتم حفظ أي مفتاح سري هنا.');
@@ -359,6 +360,7 @@ function renderTurnstileWidget(){
 }
 $('geminiEndpoint').value=geminiSettings.endpoint||'';
 $('turnstileSiteKey').value=geminiSettings.siteKey||'';
+$('llmProvider').value=geminiSettings.provider||'gemini';
 $('saveGeminiSettings').onclick=()=>saveGeminiSettings();
 $('checkGeminiGateway').onclick=async()=>{
  if(!saveGeminiSettings()||!geminiSettings.endpoint){setGeminiStatus('أدخل رابط Worker صحيحًا واحفظ الإعدادات أولًا.',true);return}
@@ -375,9 +377,9 @@ $('generateGemini').onclick=async()=>{
  else if(action==='continuity')prompt='دقّق هذا المحتوى بحثًا عن تناقضات الشخصيات والزمن والمكان والأدوات. قدّم جدولًا للحقائق المؤكدة والتناقضات والمعلومات الناقصة والإصلاحات المقترحة. لا تخترع حقائق.\n\n'+($('wOutput').value.trim()||$('wIdea').value.trim());
  else if(action==='scene-prompt')prompt='حوّل المعلومات التالية إلى Prompt سينمائي واضح بالإنجليزية، مع الحفاظ على هوية الشخصية والملابس والإضاءة والموقع. أضف الحركة والكاميرا والصوت وتجنب التغييرات غير المقصودة.\n\n'+($('wOutput').value.trim()||$('wIdea').value.trim());
  if(!prompt||!prompt.trim())return;
- const button=$('generateGemini');button.disabled=true;button.textContent='جارٍ التوليد…';setGeminiStatus('يرسل الطلب إلى Gemini عبر البوابة الآمنة…');
+ const button=$('generateGemini');button.disabled=true;button.textContent='جارٍ التوليد…';setGeminiStatus('يرسل الطلب إلى مزود الذكاء الاصطناعي المختار عبر البوابة الآمنة…');
  try{
-  const res=await fetch(geminiSettings.endpoint+'/api/generate',{method:'POST',headers:{'content-type':'application/json','accept':'application/json'},body:JSON.stringify({action,prompt,turnstileToken})});
+  const res=await fetch(geminiSettings.endpoint+'/api/generate',{method:'POST',headers:{'content-type':'application/json','accept':'application/json'},body:JSON.stringify({action,prompt,provider:geminiSettings.provider||'gemini',turnstileToken})});
   const data=await res.json();
   if(!res.ok||!data.ok)throw Error(data.error||('HTTP '+res.status));
   $('wOutput').value=data.text;
@@ -421,7 +423,7 @@ async function sendAssistantMessage(){
  const prompt='أجب عن أحدث رسالة للمستخدم مع الاستفادة من سياق المحادثة السابقة. كن مساعدًا عامًا دقيقًا وعمليًا. أجب بالعربية ما لم يطلب المستخدم لغة أخرى. إذا كان الطلب يحتاج معلومات حديثة أو تصفحًا ولم تكن لديك أداة تصفح متصلة، صرّح بذلك ولا تدّعِ أنك تحققت من الإنترنت. لا تدّعِ تنفيذ أفعال أو فتح ملفات لم تنفذها. نظّم الإجابة بحسب الحاجة.\n\nسياق المحادثة:\n'+history;
  const loading=appendAssistantMessage('assistant','جارٍ إعداد الإجابة…');
  try{
-  const res=await fetch(geminiSettings.endpoint+'/api/generate',{method:'POST',headers:{'content-type':'application/json','accept':'application/json'},body:JSON.stringify({action:'general',prompt,turnstileToken:assistantTurnstileToken})});
+  const res=await fetch(geminiSettings.endpoint+'/api/generate',{method:'POST',headers:{'content-type':'application/json','accept':'application/json'},body:JSON.stringify({action:'general',prompt,provider:geminiSettings.provider||'gemini',turnstileToken:assistantTurnstileToken})});
   let data;try{data=await res.json()}catch(_){throw Error('استجابة غير صالحة من البوابة')}
   if(!res.ok||!data.ok)throw Error(data.error||('HTTP '+res.status));
   loading.remove();assistantMessages.push({role:'assistant',text:data.text});appendAssistantMessage('assistant',data.text);

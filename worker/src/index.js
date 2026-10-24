@@ -1,4 +1,10 @@
 const MODEL = "gemini-3.8-flash";
+const PROVIDERS = {
+  gemini: { model: MODEL },
+  groq: { model: "openai/gpt-oss-120b", url: "https://api.groq.com/openai/v1/chat/completions", keyEnv: "GROQ_API_KEY" },
+  openrouter: { model: "openrouter/free", url: "https://openrouter.ai/api/v1/chat/completions", keyEnv: "OPENROUTER_API_KEY" },
+  mistral: { model: "mistral-small-latest", url: "https://api.mistral.ai/v1/chat/completions", keyEnv: "MISTRAL_API_KEY" }
+};
 const MAX_BODY_BYTES = 20_000;
 const MAX_PROMPT_CHARS = 12_000;
 const MAX_DAILY_REQUESTS_PER_IP = 30;
@@ -110,13 +116,13 @@ export default {
     if (!origin) return json({ error: "Origin not allowed." }, 403);
     const url = new URL(request.url);
     if (request.method === "GET" && url.pathname === "/api/health") {
-      return response({ ok: true, service: "NEXUS Gemini Gateway", model: MODEL, auth: "turnstile-required" }, 200, origin);
+      return response({ ok: true, service: "NEXUS AI Gateway", model: MODEL, providers: Object.keys(PROVIDERS), auth: "turnstile-required" }, 200, origin);
     }
     if (request.method !== "POST" || url.pathname !== "/api/generate") {
       return response({ error: "Not found." }, 404, origin);
     }
-    if (!env.GEMINI_API_KEY || !env.TURNSTILE_SECRET_KEY || !env.RATE_LIMITS) {
-      return response({ error: "Server configuration incomplete. Check secrets and RATE_LIMITS KV binding." }, 503, origin);
+    if (!env.TURNSTILE_SECRET_KEY || !env.RATE_LIMITS) {
+      return response({ error: "Server configuration incomplete. Check TURNSTILE_SECRET_KEY and RATE_LIMITS KV binding." }, 503, origin);
     }
     const contentType = request.headers.get("content-type") || "";
     if (!contentType.toLowerCase().includes("application/json")) {
@@ -136,6 +142,12 @@ export default {
     const action = body.action;
     const prompt = body.prompt;
     const token = body.turnstileToken;
+    const provider = typeof body.provider === "string" ? body.provider : "gemini";
+    if (!Object.prototype.hasOwnProperty.call(PROVIDERS, provider)) return response({ error: "Unsupported provider." }, 400, origin);
+    const providerConfig = PROVIDERS[provider];
+    if (provider === "gemini" ? !env.GEMINI_API_KEY : !env[providerConfig.keyEnv]) {
+      return response({ error: "Selected provider is not configured on the server. Add its API key as a Cloudflare Worker secret, then retry." }, 503, origin);
+    }
     if (!ALLOWED_ACTIONS.has(action)) return response({ error: "Unsupported action." }, 400, origin);
     if (typeof prompt !== "string" || !prompt.trim() || prompt.length > MAX_PROMPT_CHARS) {
       return response({ error: "Prompt must be between 1 and 12000 characters." }, 400, origin);
@@ -149,36 +161,58 @@ export default {
     }
     let upstream;
     try {
-      upstream = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + MODEL + ":generateContent", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-goog-api-key": env.GEMINI_API_KEY
-        },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: systemInstruction(action) }] },
-          contents: [{ role: "user", parts: [{ text: prompt.trim() }] }],
-          generationConfig: { maxOutputTokens: 8192 }
-        }),
-        signal: AbortSignal.timeout(55_000)
-      });
+      if (provider === "gemini") {
+        upstream = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + MODEL + ":generateContent", {
+          method: "POST",
+          headers: { "content-type": "application/json", "x-goog-api-key": env.GEMINI_API_KEY },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: systemInstruction(action) }] },
+            contents: [{ role: "user", parts: [{ text: prompt.trim() }] }],
+            generationConfig: { maxOutputTokens: 8192 }
+          }),
+          signal: AbortSignal.timeout(55_000)
+        });
+      } else {
+        const headers = { "content-type": "application/json", "authorization": "Bearer " + env[providerConfig.keyEnv] };
+        if (provider === "openrouter") {
+          headers["HTTP-Referer"] = "https://alm911978-del.github.io/nexus-video-studio/";
+          headers["X-Title"] = "NEXUS VIDEO 5.0";
+        }
+        upstream = await fetch(providerConfig.url, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            model: providerConfig.model,
+            messages: [
+              { role: "system", content: systemInstruction(action) },
+              { role: "user", content: prompt.trim() }
+            ],
+            max_tokens: 8192,
+            temperature: 0.7
+          }),
+          signal: AbortSignal.timeout(55_000)
+        });
+      }
     } catch {
-      return response({ error: "Gemini request timed out or could not connect. Try again." }, 504, origin);
+      return response({ error: "The selected AI provider timed out or could not connect. Try again." }, 504, origin);
     }
     if (!upstream.ok) {
       const status = upstream.status;
-      if (status === 429) return response({ error: "Gemini rate limit or free quota reached. Wait and retry." }, 429, origin);
-      if (status === 401 || status === 403) return response({ error: "Gemini rejected the server API key. Check the secret in Cloudflare." }, 502, origin);
-      return response({ error: "Gemini returned an upstream error.", upstreamStatus: status }, 502, origin);
+      if (status === 429) return response({ error: "The selected provider rate limit or free quota was reached. Wait and retry." }, 429, origin);
+      if (status === 401 || status === 403) return response({ error: "The selected provider rejected its server API key. Check the matching Cloudflare secret." }, 502, origin);
+      return response({ error: "The selected provider returned an upstream error.", upstreamStatus: status }, 502, origin);
     }
     let result;
     try {
       result = await upstream.json();
     } catch {
-      return response({ error: "Gemini returned invalid JSON." }, 502, origin);
+      return response({ error: "The selected provider returned invalid JSON." }, 502, origin);
     }
-    const text = (result.candidates?.[0]?.content?.parts || []).filter(p => typeof p.text === "string").map(p => p.text).join("").trim();
-    if (!text) return response({ error: "Gemini returned no text. The request may have been blocked or truncated." }, 502, origin);
-    return response({ ok: true, model: MODEL, text, usage: result.usageMetadata || null }, 200, origin);
+    const generatedText = provider === "gemini"
+      ? (result.candidates?.[0]?.content?.parts || []).filter(p => typeof p.text === "string").map(p => p.text).join("")
+      : (typeof result.choices?.[0]?.message?.content === "string" ? result.choices[0].message.content : Array.isArray(result.choices?.[0]?.message?.content) ? result.choices[0].message.content.map(part => part.text || "").join("") : "");
+    const text = generatedText.trim();
+    if (!text) return response({ error: "The selected provider returned no text. The request may have been blocked or truncated." }, 502, origin);
+    return response({ ok: true, provider, model: providerConfig.model, text, usage: result.usageMetadata || result.usage || null }, 200, origin);
   }
 };

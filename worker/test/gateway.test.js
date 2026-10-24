@@ -23,6 +23,7 @@ test("health reports service metadata without exposing secrets", async () => {
   const body = await res.json();
   assert.equal(body.ok, true);
   assert.equal(body.model, "gemini-3.8-flash");
+  assert.deepEqual(body.providers, ["gemini", "groq", "openrouter", "mistral"]);
   assert.equal(JSON.stringify(body).includes("fake-test-key"), false);
 });
 
@@ -53,6 +54,26 @@ test("rejects unsupported action", async () => {
   assert.equal(res.status, 400);
 });
 
+test("rejects unknown LLM providers without calling external services", async () => {
+  const res = await worker.fetch(req("/api/generate", {
+    method: "POST",
+    body: JSON.stringify({ action: "general", provider: "arbitrary-url", prompt: "test" }),
+    headers: { "content-type": "application/json" }
+  }), env);
+  assert.equal(res.status, 400);
+  assert.match((await res.json()).error, /Unsupported provider/);
+});
+
+test("returns a clear setup error when a selected provider secret is missing", async () => {
+  const res = await worker.fetch(req("/api/generate", {
+    method: "POST",
+    body: JSON.stringify({ action: "general", provider: "groq", prompt: "test" }),
+    headers: { "content-type": "application/json" }
+  }), { ...env, GROQ_API_KEY: undefined });
+  assert.equal(res.status, 503);
+  assert.match((await res.json()).error, /not configured/);
+});
+
 test("fails closed if required secrets or rate-limit binding are missing", async () => {
   const res = await worker.fetch(req("/api/generate", { method: "POST", body: JSON.stringify({ action: "series", prompt: "test" }), headers: { "content-type": "application/json" } }), { ALLOWED_ORIGINS: env.ALLOWED_ORIGINS });
   assert.equal(res.status, 503);
@@ -67,6 +88,8 @@ test("published HTML inline JavaScript parses and includes secure Gemini control
   assert.ok(inlineScripts.length > 0, "expected an inline application script");
   for (const source of inlineScripts) new Script(source);
   assert.match(html, /id="generateGemini"/);
+  assert.match(html, /id="llmProvider"/);
+  assert.match(html, /provider:geminiSettings.provider/);
   assert.match(html, /id="assistantMessages"/);
   assert.match(html, /id="assistantSend"/);
   assert.match(html, /action:'general'/);
