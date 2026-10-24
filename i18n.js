@@ -26,7 +26,7 @@ function enhanceNexus(){
    <div class="status-tile"><div class="muted">بوابة Gemini</div><h3><span class="status-dot pending"></span>تحتاج فحص اتصال</h3><small>يلزم Worker منشور وإعداد Turnstile ومفتاح خادم آمن.</small></div>
    <div class="status-tile"><div class="muted">الحسابات والسحابة</div><h3><span class="status-dot pending"></span>غير مهيأة افتراضيًا</h3><small>Supabase غير متصل ما لم تضبط إعداداته وتختبر تسجيل الدخول.</small></div>
   </div>
-  <div class="card stack"><h3>فحص محلي سريع</h3><p class="muted">يفحص عناصر الواجهة الأساسية وإمكانية الوصول إلى التخزين المحلي، ولا يتصل بخدمات خارجية ولا يستهلك أرصدة.</p><div class="row"><button id="nexus-run-audit" class="primary" type="button">تشغيل الفحص المحلي</button><button id="nexus-open-backup" type="button">فتح النسخ الاحتياطي</button></div><div id="nexus-audit-results" class="stack" aria-live="polite"><div class="item muted">لم يُشغّل الفحص بعد.</div></div></div>
+  <div class="card stack"><h3>فحص محلي سريع</h3><p class="muted">يفحص عناصر الواجهة الأساسية وإمكانية الوصول إلى التخزين المحلي، ولا يتصل بخدمات خارجية ولا يستهلك أرصدة.</p><div class="row"><button id="nexus-run-audit" class="primary" type="button">تشغيل الفحص المحلي</button><button id="nexus-copy-audit" type="button">نسخ تقرير الفحص</button><button id="nexus-download-audit" type="button">تنزيل تقرير JSON</button><button id="nexus-open-backup" type="button">فتح النسخ الاحتياطي</button></div><p id="nexus-audit-actions-status" class="muted" role="status" aria-live="polite">الفحص محلي فقط ولا يرسل بيانات إلى الخارج.</p><div id="nexus-audit-results" class="stack" aria-live="polite"><div class="item muted">لم يُشغّل الفحص بعد.</div></div></div>
   <div class="card stack"><h3>مبادئ NEXUS Ω</h3><ul><li>لا نعلن نجاح أي ربط قبل اختبار حقيقي.</li><li>لا نضع مفاتيح API السرية داخل الواجهة العامة.</li><li>لا ننشئ موارد مدفوعة أو نستهلك أرصدة دون حاجة.</li><li>صدّر نسخة احتياطية قبل مسح بيانات المتصفح أو تغيير الجهاز.</li></ul></div>
  `);
  panel('nexus-community',`
@@ -42,18 +42,47 @@ function enhanceNexus(){
  };
  [dashboardNav,communityNav].forEach(b=>b.addEventListener('click',()=>switchPage(b.dataset.page)));
  document.getElementById('nexus-open-backup').addEventListener('click',()=>switchPage('backup'));
+ let lastAuditReport=null;
  function runAudit(){
   const out=document.getElementById('nexus-audit-results');if(!out)return;
-  const ids=['projects','writer','assistant','characters','scenes','backup','media','engine'];
-  const checks=ids.map(id=>({label:'واجهة '+id,ok:!!document.getElementById(id)}));
-  checks.push({label:'زر الدخول المحلي موجود',ok:!!document.getElementById('authLocalMode')});
-  let storageOk=false;try{const k='nexus-v5-audit-probe';localStorage.setItem(k,'1');storageOk=localStorage.getItem(k)==='1';localStorage.removeItem(k)}catch(e){}
-  checks.push({label:'التخزين المحلي متاح',ok:storageOk});
+  const checks=[];
+  const add=(label,status,detail)=>checks.push({label,status,detail});
+  const pageIds=['projects','writer','assistant','characters','scenes','backup','media','engine'];
+  pageIds.forEach(id=>add('صفحة '+id,document.getElementById(id)?'pass':'warn',document.getElementById(id)?'عنصر الصفحة موجود في DOM.':'لم يتم العثور على عنصر الصفحة.'));
+  const allIds=[...document.querySelectorAll('[id]')].map(el=>el.id);
+  const duplicateIds=[...new Set(allIds.filter((id,index)=>allIds.indexOf(id)!==index))];
+  add('تفرد معرّفات HTML',duplicateIds.length===0?'pass':'warn',duplicateIds.length===0?'لم تُكتشف معرّفات مكررة.':'معرّفات مكررة: '+duplicateIds.join(', '));
+  const navButtons=[...nav.querySelectorAll('button[data-page]')];
+  const missingTargets=navButtons.filter(button=>!document.getElementById(button.dataset.page)).map(button=>button.dataset.page);
+  add('روابط التنقل الداخلية',missingTargets.length===0?'pass':'warn',missingTargets.length===0?'كل أزرار التنقل تشير إلى صفحة موجودة.':'صفحات غير موجودة: '+missingTargets.join(', '));
+  let storageOk=false;let storageDetail='المتصفح منع الكتابة أو القراءة من التخزين المحلي.';const probe='nexus-v5-audit-probe-'+Date.now()+'-'+Math.random().toString(36).slice(2);
+  try{localStorage.setItem(probe,'ok');storageOk=localStorage.getItem(probe)==='ok';storageDetail=storageOk?'نجحت الكتابة والقراءة من localStorage.':'لم تتطابق نتيجة قراءة اختبار التخزين.'}catch(error){storageDetail='تعذر اختبار التخزين المحلي: '+String(error&&error.name||'خطأ غير معروف')}finally{try{localStorage.removeItem(probe)}catch(error){}}
+  add('التخزين المحلي',storageOk?'pass':'warn',storageDetail);
+  const secureContext=location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1';
+  add('سياق HTTPS',secureContext?'pass':'warn',secureContext?'الصفحة تعمل عبر HTTPS أو localhost.':'الصفحة ليست ضمن سياق HTTPS؛ قد تتعطل بعض واجهات المتصفح الآمنة.');
+  const mediaApis=typeof Blob==='function'&&typeof URL!=='undefined'&&typeof URL.createObjectURL==='function';
+  add('واجهات الملفات المحلية',mediaApis?'pass':'warn',mediaApis?'Blob وURL.createObjectURL متاحان.':'إحدى واجهات إنشاء معاينات الملفات غير متاحة.');
+  add('واجهة الشبكة للمتصفح',typeof fetch==='function'?'pass':'warn',typeof fetch==='function'?'fetch متاحة؛ لم يتم إرسال أي طلب في هذا الفحص.':'fetch غير متاحة في هذا المتصفح.');
+  const authConfigured=typeof configured==='function'&&configured();
+  const supabaseLoaded=!!(window.supabase&&typeof window.supabase.createClient==='function');
+  add('إعداد الحسابات Supabase',authConfigured?(supabaseLoaded?'info':'warn'):'info',authConfigured?(supabaseLoaded?'الإعداد موجود والمكتبة محملة؛ لم يتم اختبار تسجيل الدخول.':'الإعداد موجود لكن مكتبة Supabase غير متاحة.'):'اختياري وغير مهيأ؛ وضع الاستخدام المحلي لا يحتاج حسابًا.');
+  let endpoint='';let siteKey='';try{if(typeof geminiSettings!=='undefined'){endpoint=String(geminiSettings.endpoint||'').trim();siteKey=String(geminiSettings.siteKey||'').trim()}}catch(error){}
+  let endpointStatus='info',endpointDetail='بوابة Gemini غير مهيأة محليًا؛ لم يتم إجراء أي اتصال.';
+  if(endpoint){try{const parsed=new URL(endpoint);if(parsed.protocol==='https:'){endpointStatus='info';endpointDetail='تم حفظ عنوان HTTPS محليًا؛ لم يتم اختبار الاتصال أو صلاحية الخادم.'}else{endpointStatus='warn';endpointDetail='عنوان البوابة ليس HTTPS.'}}catch(error){endpointStatus='warn';endpointDetail='عنوان البوابة المحفوظ ليس URL صالحًا.'}}
+  add('إعداد بوابة Gemini',endpointStatus,endpointDetail);
+  add('إعداد Turnstile',siteKey?(window.turnstile?'info':'warn'):'info',siteKey?(window.turnstile?'المفتاح العام موجود والمكتبة محملة؛ لم يتم التحقق من رمز التحدي.':'يوجد مفتاح موقع لكن مكتبة Turnstile غير متاحة.'):'غير مهيأ؛ لم يتم إجراء اختبار خارجي.');
+  add('توليد الفيديو والصوت', 'info','لم يتم اختبار توليد فيديو أو صوت فعلي. يلزم محرك حقيقي متصل واختبار ملف ناتج صالح.');
+  add('ملف الهوية البصرية',document.querySelector('link[href="./assets/nexus-brand.css"]')?'pass':'info',document.querySelector('link[href="./assets/nexus-brand.css"]')?'تمت إضافة رابط ملف الهوية إلى الصفحة.':'لم يظهر رابط ملف الهوية في DOM بعد.');
   out.replaceChildren();
-  checks.forEach(c=>{const row=document.createElement('div');row.className='item';const strong=document.createElement('strong');strong.textContent=(c.ok?'✓ ':'! ')+c.label;strong.style.color=c.ok?'#72f0db':'#e8c77a';const note=document.createElement('div');note.className='muted';note.textContent=c.ok?'اجتاز الفحص المحلي.':'لم يجتز الفحص؛ قد يكون المتصفح يمنع هذه الوظيفة.';row.append(strong,note);out.appendChild(row)});
-  const summary=document.createElement('p');summary.className='muted';summary.textContent='النتيجة: '+checks.filter(c=>c.ok).length+' / '+checks.length+' فحوص محلية ناجحة. هذا ليس اختبارًا للخدمات السحابية أو لتوليد الوسائط.';out.appendChild(summary);
+  checks.forEach(check=>{const row=document.createElement('div');row.className='item';const strong=document.createElement('strong');const symbol=check.status==='pass'?'✓ ':check.status==='warn'?'! ':'i ';strong.textContent=symbol+check.label;strong.style.color=check.status==='pass'?'#72f0db':check.status==='warn'?'#e8c77a':'#b9b2dc';const note=document.createElement('div');note.className='muted';note.textContent=check.detail;row.append(strong,note);out.appendChild(row)});
+  const passed=checks.filter(check=>check.status==='pass').length;const warnings=checks.filter(check=>check.status==='warn').length;const informational=checks.filter(check=>check.status==='info').length;
+  const summary=document.createElement('p');summary.className='muted';summary.textContent='النتيجة: '+passed+' نجاح محلي، '+warnings+' تحذير، '+informational+' حالة معلوماتية من '+checks.length+' فحصًا. لا يتضمن هذا اختبارًا حيًا للخدمات السحابية أو توليد الوسائط.';out.appendChild(summary);
+  lastAuditReport={generatedAt:new Date().toISOString(),scope:'local-browser-only; no external requests were made',summary:{passed,warnings,informational,total:checks.length},checks};
+  const status=document.getElementById('nexus-audit-actions-status');if(status)status.textContent='اكتمل الفحص المحلي في '+lastAuditReport.generatedAt+'. لم تُرسل بيانات إلى أي خدمة خارجية.';
  }
  document.getElementById('nexus-run-audit').addEventListener('click',runAudit);
+ document.getElementById('nexus-copy-audit').addEventListener('click',async()=>{if(!lastAuditReport)runAudit();const status=document.getElementById('nexus-audit-actions-status');try{if(!navigator.clipboard||typeof navigator.clipboard.writeText!=='function')throw new Error('clipboard unavailable');await navigator.clipboard.writeText(JSON.stringify(lastAuditReport,null,2));if(status)status.textContent='تم نسخ تقرير JSON إلى الحافظة.'}catch(error){if(status)status.textContent='تعذر النسخ التلقائي في هذا المتصفح؛ استخدم زر تنزيل تقرير JSON.'}});
+ document.getElementById('nexus-download-audit').addEventListener('click',()=>{if(!lastAuditReport)runAudit();const blob=new Blob([JSON.stringify(lastAuditReport,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='nexus-site-diagnostics.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);const status=document.getElementById('nexus-audit-actions-status');if(status)status.textContent='تم تجهيز تنزيل تقرير الفحص المحلي بصيغة JSON.'});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enhanceNexus,{once:true});else enhanceNexus();
 
