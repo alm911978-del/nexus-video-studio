@@ -184,6 +184,22 @@ test("Gemini 3.8 generation request uses supported parameters and returns model 
   }
 });
 
+test("multimodal scene lab exposes reference inputs and honest local-only export", () => {
+  const htmlPath = fileURLToPath(new URL("../../index.html", import.meta.url));
+  const html = readFileSync(htmlPath, "utf8");
+  assert.ok(html.includes('id="scenePackLab"'));
+  assert.ok(html.includes('id="sceneRefImages"'));
+  assert.ok(html.includes('accept="image/*" multiple'));
+  assert.ok(html.includes('id="sceneRefAudio"'));
+  assert.ok(html.includes('accept="audio/*"'));
+  assert.ok(html.includes('id="scenePackPrompt"'));
+  assert.ok(html.includes('id="buildScenePack"'));
+  assert.ok(html.includes('id="downloadScenePack"'));
+  assert.ok(html.includes('generationStatus:\'prompt_package_only_not_generated\''));
+  assert.ok(html.includes("لا تُرفع الملفات ولا يتم توليد فيديو تلقائيًا."));
+  assert.ok(html.includes("window.addEventListener('beforeunload',clearScenePackUrls)"));
+});
+
 test("NEXUS prototype version labels are consistent", () => {
   const htmlPath = fileURLToPath(new URL("../../index.html", import.meta.url));
   const html = readFileSync(htmlPath, "utf8");
