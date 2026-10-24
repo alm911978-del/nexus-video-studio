@@ -145,6 +145,17 @@ test("backup import validates record shapes and rendered IDs are HTML-escaped", 
   assert.match(html, /لم يتم استبدال بياناتك/);
 });
 
+test("unconfigured Supabase still permits a browser-local workspace without an account", () => {
+  const htmlPath = fileURLToPath(new URL("../../index.html", import.meta.url));
+  const html = readFileSync(htmlPath, "utf8");
+  assert.match(html, /id="authLocalMode"/);
+  assert.match(html, /function loadLocalDB\(/);
+  assert.match(html, /nexus-video-50-local-data/);
+  assert.match(html, /localMode=true/);
+  assert.match(html, /const save=\(\)=>\{try\{if\(!KEY\)return;/);
+  assert.match(html, /الوضع المحلي مجاني ولا يحتاج إلى حساب/);
+});
+
 test("Gemini 3.8 generation request uses supported parameters and returns model text", async () => {
   const originalFetch = globalThis.fetch;
   const upstreamCalls = [];
