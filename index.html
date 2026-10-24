@@ -10,7 +10,7 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid
 .chat-user{background:#292442;border:1px solid #514875;border-radius:14px;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere}.chat-assistant{background:#10131e;border:1px solid var(--line);border-radius:14px;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere}.chat-label{font-size:12px;color:var(--muted);margin-bottom:4px}.chat-error{color:#ffb0b8}.media-preview{display:block;max-width:100%;max-height:260px;margin-top:10px;border-radius:10px;background:#080a10}.media-card{min-width:0;overflow-wrap:anywhere}.media-meta{font-size:13px;color:var(--muted);white-space:pre-wrap} .auth-shell{max-width:560px;margin:24px auto;padding:14px}.auth-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px}.auth-shell[hidden],#appWorkspace[hidden]{display:none!important}form button:disabled{opacity:.6;cursor:wait}
 </style></head>
 <body><main class="app">
-<header class="top"><div class="brand"><div class="logo">NΩ</div><div><h1>NEXUS VIDEO 5.0</h1><div class="muted">استوديو صناعة الأفلام بالذكاء الاصطناعي</div></div></div><span id="accountEmail" class="pill" hidden></span><label for="languageSwitcher" style="display:inline-block;margin:0 6px">اللغة / Language</label><select id="languageSwitcher" aria-label="Language" style="width:auto;min-width:125px"><option value="ar">العربية</option><option value="en">English</option><option value="fr">Français</option><option value="es">Español</option></select><span class="pill">Prototype 0.3 · محلي</span></header>
+<header class="top"><div class="brand"><div class="logo">NΩ</div><div><h1>NEXUS VIDEO 5.0</h1><div class="muted">استوديو صناعة الأفلام بالذكاء الاصطناعي</div></div></div><span id="accountEmail" class="pill" hidden></span><button id="authLogout" type="button" hidden>تسجيل الخروج</button><label for="languageSwitcher" style="display:inline-block;margin:0 6px">اللغة / Language</label><select id="languageSwitcher" aria-label="Language" style="width:auto;min-width:125px"><option value="ar">العربية</option><option value="en">English</option><option value="fr">Français</option><option value="es">Español</option></select><span class="pill">Prototype 0.3 · محلي</span></header>
 <section id="authGate" class="auth-shell">
  <div class="auth-card">
   <div class="brand"><div class="logo">NΩ</div><div><h2>NEXUS ACCOUNT</h2><div class="muted">حسابك الآمن في NEXUS VIDEO</div></div></div>
@@ -146,6 +146,8 @@ const save=()=>{try{if(!currentAuthUser||!KEY)return;localStorage.setItem(KEY,JS
 function showWorkspace(user){
  currentAuthUser=user||null;
  $('authGate').hidden=!!user;$('appWorkspace').hidden=!user;
+ $('accountEmail').hidden=!user;$('accountEmail').textContent=user?.email||'';
+ $('authLogout').hidden=!user;
  if(user){$('authConfigStatus').textContent='تم تسجيل الدخول: '+user.email;loadUserDB(user.id);render();}
  else{KEY='';db=emptyDB();}
 }
@@ -182,11 +184,8 @@ $('authForm').addEventListener('submit',async event=>{
  }catch(error){authStatus(error.message||'تعذر إكمال العملية. حاول مجددًا.',true)}
  finally{button.disabled=false}
 });
-const logoutButton=document.createElement('button');logoutButton.id='authLogout';logoutButton.textContent='تسجيل الخروج';logoutButton.hidden=true;logoutButton.addEventListener('click',async()=>{if(supabaseClient){const {error}=await supabaseClient.auth.signOut();if(error)authStatus(error.message,true);else showWorkspace(null)}});
+$('authLogout').addEventListener('click',async()=>{if(!supabaseClient)return;const {error}=await supabaseClient.auth.signOut();if(error)authStatus('تعذر تسجيل الخروج: '+error.message,true);else{showWorkspace(null);authStatus('تم تسجيل الخروج بأمان.')}});
 const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-$('authModeSignup').addEventListener('click',()=>setAuthMode('signup'));
-$('authModeLogin').addEventListener('click',()=>setAuthMode('login'));
-$('authModeReset').addEventListener('click',()=>setAuthMode('reset'));
 
 function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function empty(msg){return '<div class="empty">'+msg+'</div>'}
