@@ -56,3 +56,9 @@ test("diagnostics controls have translations for supported languages", () => {
   assert.match(i18n, /'تنزيل تقرير JSON':'Descargar informe JSON'/);
 });
 
+
+test("keyboard users can skip directly to the main application content", () => {
+  assert.match(html, /<a class="skip-link" href="#mainContent">تجاوز إلى المحتوى الرئيسي<\/a>/);
+  assert.match(html, /<main id="mainContent" class="app" tabindex="-1">/);
+  assert.match(html, /\.skip-link:focus\{top:12px/);
+});
