@@ -1,0 +1,68 @@
+name: Accessibility Checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "i18n.js"
+      - "assets/**"
+      - "tests/**"
+      - ".github/workflows/accessibility.yml"
+  pull_request:
+    paths:
+      - "index.html"
+      - "i18n.js"
+      - "assets/**"
+      - "tests/**"
+      - ".github/workflows/accessibility.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  a11y-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+
+      # Lightweight static checks that do not require a running browser server
+      - name: Static accessibility smoke (lang, skip-link, main landmark)
+        run: |
+          set -e
+          echo "Checking index.html for basic a11y signals..."
+
+          # Must declare language
+          grep -q 'lang=' index.html || { echo "Missing lang attribute"; exit 1; }
+
+          # Prefer Arabic primary language
+          grep -Eiq 'lang=["'\'']?ar' index.html || echo "Warning: primary lang may not be Arabic"
+
+          # Main content landmark (id or role or <main>)
+          if ! grep -Eq '<main|id=["'\'']main["'\'']|role=["'\'']main["'\'']' index.html; then
+            echo "Missing main landmark"
+            exit 1
+          fi
+
+          # Skip link (common a11y pattern) — warn only if missing
+          if ! grep -Eiq 'skip|تخطي|تجاوز' index.html; then
+            echo "Warning: no obvious skip-link text found (recommended for keyboard users)"
+          fi
+
+          echo "Static a11y smoke checks passed."
+
+      - name: Run existing site-diagnostics tests if present
+        run: |
+          if [ -f tests/site-diagnostics.test.mjs ]; then
+            node --test tests/site-diagnostics.test.mjs
+          else
+            echo "No site-diagnostics tests — skipped"
+          fi
