@@ -1,0 +1,26 @@
+name: NEXUS static smoke checks
+
+on:
+  push:
+    branches: [main, nexus-5.0-pages-readiness]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run static smoke tests
+        run: node --test test/site-smoke.test.mjs
+      - name: Run gateway unit tests
+        working-directory: worker
+        run: node --test
