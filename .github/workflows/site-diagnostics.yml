@@ -1,4 +1,4 @@
-name: NEXUS Site Diagnostics Tests
+name: NEXUS Site Diagnostics and Ω Data Integrity
 
 on:
   push:
@@ -8,6 +8,10 @@ on:
       - "index.html"
       - "i18n.js"
       - "tests/site-diagnostics.test.mjs"
+      - "tests/omega-status-integrity.test.mjs"
+      - "docs/NEXUS-OMEGA-001-300-STATUS.csv"
+      - "docs/NEXUS-OMEGA-301-900-STATUS.csv"
+      - "docs/NEXUS-OMEGA-301-900-EXECUTION-REPORT.md"
       - ".github/workflows/site-diagnostics.yml"
   pull_request:
     branches:
@@ -16,6 +20,10 @@ on:
       - "index.html"
       - "i18n.js"
       - "tests/site-diagnostics.test.mjs"
+      - "tests/omega-status-integrity.test.mjs"
+      - "docs/NEXUS-OMEGA-001-300-STATUS.csv"
+      - "docs/NEXUS-OMEGA-301-900-STATUS.csv"
+      - "docs/NEXUS-OMEGA-301-900-EXECUTION-REPORT.md"
       - ".github/workflows/site-diagnostics.yml"
 
 permissions:
@@ -32,5 +40,5 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "22"
-      - name: Run static site diagnostics tests
-        run: node --test tests/site-diagnostics.test.mjs
+      - name: Run site diagnostics and Ω CSV integrity tests
+        run: node --test tests/site-diagnostics.test.mjs tests/omega-status-integrity.test.mjs
