@@ -7,13 +7,19 @@ on:
       - "worker/**"
       - "index.html"
       - "i18n.js"
+      - "tests/**"
       - ".github/workflows/worker-tests.yml"
   pull_request:
     paths:
       - "worker/**"
       - "index.html"
       - "i18n.js"
+      - "tests/**"
       - ".github/workflows/worker-tests.yml"
+  schedule:
+    # Run every Monday at 06:00 UTC to catch silent regressions
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -21,14 +27,24 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - name: Check out repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "20"
+
       - name: Run gateway and static-site tests
         working-directory: worker
         run: npm test
+
+      - name: Run site diagnostics (if present)
+        run: |
+          if [ -f tests/site-diagnostics.test.mjs ]; then
+            node --test tests/site-diagnostics.test.mjs
+          else
+            echo "No site-diagnostics tests found — skipping"
+          fi
