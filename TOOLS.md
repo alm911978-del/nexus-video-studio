@@ -10,6 +10,16 @@ This file tracks real integration status. A tool is **not connected** just becau
 - AI speech generation and lip-sync: no working integration is present in the front end.
 - Local media lab and SRT builder: implemented in the browser; automated CI checks passed on 2026-10-24. Manual browser testing across real media files remains outstanding.
 
+## GitHub-native tools (repository automation)
+
+| Tool | Purpose | Status | Notes |
+|------|---------|--------|-------|
+| **CodeQL** | Static Application Security Testing (SAST) for JavaScript | implemented_needs_test | Workflow: `.github/workflows/codeql.yml` — runs on push/PR + weekly |
+| **TruffleHog** | Secrets scanning across full git history | implemented_needs_test | Workflow: `.github/workflows/secrets-scan.yml` |
+| **Dependabot** | Automated dependency updates (npm + GitHub Actions) | source_present_needs_setup | Config on branch `nexus/automation-and-monitoring` |
+| **Cloudflare Wrangler Action** | One-click / scheduled Worker deploy | source_present_needs_setup | Manual `workflow_dispatch` only until `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` secrets exist |
+| Worker unit tests + site diagnostics | Regression protection | unit_tested_needs_end_to_end | Existing workflows |
+
 ## Status vocabulary
 
 - `planned`: not implemented.
