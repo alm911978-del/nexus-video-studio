@@ -305,3 +305,62 @@ test("NEXUS visual layer ships the brand assets, dashboard, and honest backend s
   assert.match(css, /@media\(max-width:700px\)/);
   assert.match(svg, /<svg[\s\S]*NEXUS VIDEO/);
 });
+
+
+test("health response includes no-store and anti-sniffing security headers", async () => {
+  const res = await worker.fetch(req("/api/health"), env);
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get("cache-control"), "no-store");
+  assert.equal(res.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(res.headers.get("referrer-policy"), "no-referrer");
+});
+
+test("rejects missing Turnstile token without contacting an AI provider", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url) => {
+    calls.push(String(url));
+    if (String(url).includes("challenges.cloudflare.com/turnstile/v0/siteverify")) {
+      return new Response(JSON.stringify({ success: false }), {
+        status: 200, headers: { "content-type": "application/json" }
+      });
+    }
+    throw new Error("AI provider must not be contacted for an invalid security token");
+  };
+  try {
+    const res = await worker.fetch(req("/api/generate", {
+      method: "POST",
+      body: JSON.stringify({ action: "general", prompt: "test" }),
+      headers: { "content-type": "application/json" }
+    }), env);
+    assert.equal(res.status, 403);
+    assert.equal(calls.length, 0, "missing tokens must be rejected before any outbound request");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("rejects a Turnstile token verified for the wrong hostname", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url) => {
+    calls.push(String(url));
+    if (String(url).includes("challenges.cloudflare.com/turnstile/v0/siteverify")) {
+      return new Response(JSON.stringify({ success: true, hostname: "attacker.example" }), {
+        status: 200, headers: { "content-type": "application/json" }
+      });
+    }
+    throw new Error("AI provider must not be contacted when hostname verification fails");
+  };
+  try {
+    const res = await worker.fetch(req("/api/generate", {
+      method: "POST",
+      body: JSON.stringify({ action: "general", prompt: "test", turnstileToken: "valid-token" }),
+      headers: { "content-type": "application/json" }
+    }), env);
+    assert.equal(res.status, 403);
+    assert.equal(calls.length, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
