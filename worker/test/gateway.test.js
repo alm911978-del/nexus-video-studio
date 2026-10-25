@@ -334,8 +334,7 @@ test("rejects missing Turnstile token without contacting an AI provider", async 
       headers: { "content-type": "application/json" }
     }), env);
     assert.equal(res.status, 403);
-    assert.equal(calls.length, 1);
-    assert.match(calls[0], /siteverify/);
+    assert.equal(calls.length, 0, "missing tokens must be rejected before any outbound request");
   } finally {
     globalThis.fetch = originalFetch;
   }
