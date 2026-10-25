@@ -14,10 +14,12 @@ This file tracks real integration status. A tool is **not connected** just becau
 
 | Tool | Purpose | Status | Notes |
 |------|---------|--------|-------|
-| **CodeQL** | Static Application Security Testing (SAST) for JavaScript | implemented_needs_test | Workflow: `.github/workflows/codeql.yml` — runs on push/PR + weekly |
-| **TruffleHog** | Secrets scanning across full git history | implemented_needs_test | Workflow: `.github/workflows/secrets-scan.yml` |
+| **CodeQL** | Static Application Security Testing (SAST) for JavaScript | implemented_needs_test | `.github/workflows/codeql.yml` — push/PR + weekly |
+| **TruffleHog** | Secrets scanning across full git history | implemented_needs_test | `.github/workflows/secrets-scan.yml` |
+| **Lychee link checker** | Detects broken links in README, TOOLS, MONITORING, worker docs, index.html | implemented_needs_test | `.github/workflows/link-check.yml` |
+| **Accessibility smoke** | Static checks for `lang`, main landmark, skip-link hints + site-diagnostics | implemented_needs_test | `.github/workflows/accessibility.yml` |
 | **Dependabot** | Automated dependency updates (npm + GitHub Actions) | source_present_needs_setup | Config on branch `nexus/automation-and-monitoring` |
-| **Cloudflare Wrangler Action** | One-click / scheduled Worker deploy | source_present_needs_setup | Manual `workflow_dispatch` only until `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` secrets exist |
+| **Cloudflare Wrangler Action** | Deploy Worker from Actions (manual) | source_present_needs_setup | Needs `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`; see `worker/DEPLOY.md` |
 | Worker unit tests + site diagnostics | Regression protection | unit_tested_needs_end_to_end | Existing workflows |
 
 ## Status vocabulary
@@ -72,7 +74,7 @@ This file tracks real integration status. A tool is **not connected** just becau
 ## Recommended implementation order
 
 1. Manually test the local media lab and SRT builder in the published site using representative image, video, and audio files.
-2. Deploy the multi-provider text gateway, configure Turnstile/KV and one provider secret, then verify a real end-to-end text request.
+2. Deploy the multi-provider text gateway (see `worker/DEPLOY.md`), configure Turnstile/KV and one provider secret, then verify a real end-to-end text request.
 3. Add one image-generation provider and test a real request.
 4. Add one video-generation provider and test a real short clip.
 5. Add Arabic TTS, then speech recognition and lip-sync only if genuinely available at no cost.
