@@ -6,11 +6,13 @@ on:
     paths:
       - "worker/**"
       - "index.html"
+      - "i18n.js"
       - ".github/workflows/worker-tests.yml"
   pull_request:
     paths:
       - "worker/**"
       - "index.html"
+      - "i18n.js"
       - ".github/workflows/worker-tests.yml"
 
 permissions:
