@@ -1,0 +1,43 @@
+name: Link Checker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**.html"
+      - "**.md"
+      - ".github/workflows/link-check.yml"
+  pull_request:
+    paths:
+      - "**.html"
+      - "**.md"
+      - ".github/workflows/link-check.yml"
+  schedule:
+    - cron: "30 5 * * 1"  # Weekly Monday
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  link-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Check Markdown and HTML links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # Check README, TOOLS, MONITORING, worker docs, and main HTML
+          args: >-
+            --verbose
+            --no-progress
+            --accept 200,206,429
+            --timeout 20
+            --max-concurrency 8
+            README.md TOOLS.md MONITORING.md worker/README.md index.html
+          fail: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
