@@ -23,4 +23,4 @@ jobs:
         run: node --test test/site-smoke.test.mjs
       - name: Run gateway unit tests
         working-directory: worker
-        run: node --test
+        run: npm test
