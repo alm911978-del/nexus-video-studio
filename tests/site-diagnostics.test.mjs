@@ -12,7 +12,7 @@ test("main inline application script parses as JavaScript", () => {
 });
 
 test("writer generation resets the single-use Turnstile token after every attempt", () => {
-  assert.match(html, /finally\\{try\\{window\\.turnstile\\?\\.reset\\(turnstileWidgetId\\)\\}catch\\(_\\)\\{\\}turnstileToken='';button\\.disabled=false/);
+  assert.match(html, /finally\{try\{window\.turnstile\?\.reset\(turnstileWidgetId\)\}catch\(_\)\{\}turnstileToken='';button\.disabled=false/);
 });
 
 test("language and visual enhancement script parses as JavaScript", () => {
