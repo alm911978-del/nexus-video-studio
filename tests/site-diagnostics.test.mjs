@@ -11,6 +11,10 @@ test("main inline application script parses as JavaScript", () => {
   for (const source of scripts) assert.doesNotThrow(() => new Function(source));
 });
 
+test("writer generation resets the single-use Turnstile token after every attempt", () => {
+  assert.match(html, /finally\\{try\\{window\\.turnstile\\?\\.reset\\(turnstileWidgetId\\)\\}catch\\(_\\)\\{\\}turnstileToken='';button\\.disabled=false/);
+});
+
 test("language and visual enhancement script parses as JavaScript", () => {
   assert.doesNotThrow(() => new Function(i18n));
 });
