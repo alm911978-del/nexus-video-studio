@@ -129,6 +129,32 @@ test("rejects oversized generation payloads", async () => {
   assert.equal(res.status, 413);
 });
 
+test("rejects oversized streamed payloads without relying on Content-Length", async () => {
+  let cancelled = false;
+  let pulls = 0;
+  const body = new ReadableStream({
+    pull(controller) {
+      pulls += 1;
+      if (pulls === 1) {
+        controller.enqueue(new TextEncoder().encode('{"action":"series","prompt":"'));
+      } else {
+        controller.enqueue(new Uint8Array(20_000));
+      }
+    },
+    cancel() {
+      cancelled = true;
+    }
+  });
+  const res = await worker.fetch(req("/api/generate", {
+    method: "POST",
+    body,
+    duplex: "half",
+    headers: { "content-type": "application/json" }
+  }), env);
+  assert.equal(res.status, 413);
+  assert.equal(cancelled, true, "oversized request stream should be cancelled");
+});
+
 test("enforces daily IP rate limit after successful Turnstile verification", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => new Response(JSON.stringify({ success: true, hostname: "alm911978-del.github.io" }), {
