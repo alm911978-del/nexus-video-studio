@@ -5,7 +5,7 @@ const PROVIDERS = {
   openrouter: { model: "openrouter/free", url: "https://openrouter.ai/api/v1/chat/completions", keyEnv: "OPENROUTER_API_KEY" },
   mistral: { model: "mistral-small-latest", url: "https://api.mistral.ai/v1/chat/completions", keyEnv: "MISTRAL_API_KEY" }
 };
-const MAX_BODY_BYTES = 20_000;
+const MAX_BODY_BYTES = 64 * 1024;
 const MAX_PROMPT_CHARS = 12_000;
 const MAX_DAILY_REQUESTS_PER_IP = 30;
 const ALLOWED_ACTIONS = new Set(["series", "episode", "continuity", "scene-prompt", "general"]);
