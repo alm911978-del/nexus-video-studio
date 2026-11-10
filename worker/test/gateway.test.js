@@ -120,7 +120,7 @@ test("answers CORS preflight only for the configured origin", async () => {
 });
 
 test("rejects oversized generation payloads", async () => {
-  const body = JSON.stringify({ action: "series", prompt: "x".repeat(21_000), turnstileToken: "test" });
+  const body = JSON.stringify({ action: "series", prompt: "x".repeat(70_000), turnstileToken: "test" });
   const res = await worker.fetch(req("/api/generate", {
     method: "POST",
     body,
