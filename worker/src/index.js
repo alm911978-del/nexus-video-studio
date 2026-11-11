@@ -82,6 +82,36 @@ async function verifyTurnstile(token, ip, env) {
   }
 }
 
+async function readLimitedBody(request) {
+  const reader = request.body?.getReader();
+  if (!reader) return { tooLarge: false, text: "" };
+
+  const chunks = [];
+  let totalBytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > MAX_BODY_BYTES) {
+        try { await reader.cancel("Request body too large"); } catch {}
+        return { tooLarge: true };
+      }
+      chunks.push(value);
+    }
+  } finally {
+    try { reader.releaseLock(); } catch {}
+  }
+
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return { tooLarge: false, text: new TextDecoder().decode(bytes) };
+}
+
 async function checkRateLimit(ip, env) {
   if (!env.RATE_LIMITS) return false;
   const day = new Date().toISOString().slice(0, 10);
@@ -132,9 +162,9 @@ export default {
     if (length > MAX_BODY_BYTES) return response({ error: "Request too large." }, 413, origin);
     let body;
     try {
-      const raw = await request.text();
-      if (new TextEncoder().encode(raw).length > MAX_BODY_BYTES) return response({ error: "Request too large." }, 413, origin);
-      body = JSON.parse(raw);
+      const limited = await readLimitedBody(request);
+      if (limited.tooLarge) return response({ error: "Request too large." }, 413, origin);
+      body = JSON.parse(limited.text);
     } catch {
       return response({ error: "Invalid JSON body." }, 400, origin);
     }
