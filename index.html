@@ -130,7 +130,7 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 <script>
-// Supabase Auth configuration. Replace these placeholders with your project's URL and PUBLIC publishable key.
+// Supabase Auth uses public client configuration here. The publishable key is designed for browser use; never put a Supabase secret/service-role key in this file.
 const SUPABASE_URL='https://jrdugbwyjeqedcsokzow.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_LRetjT9c6XGQfX_T2XPpPg_TQF-gtPZ';
 let supabaseClient=null, currentAuthUser=null, authMode='signup', authReady=false, localMode=false;
@@ -384,9 +384,8 @@ $('generateGemini').onclick=async()=>{
   if(!res.ok||!data.ok)throw Error(data.error||('HTTP '+res.status));
   $('wOutput').value=data.text;
   setGeminiStatus('نجح التوليد باستخدام '+data.model+(data.usage?' · اكتمل الطلب':'')+'. انسخ النتيجة أو صدّرها وراجعها قبل الاعتماد.');
-  try{window.turnstile?.reset(turnstileWidgetId)}catch(_){}turnstileToken='';
  }catch(e){setGeminiStatus('تعذر التوليد: '+(e.message||'خطأ غير معروف')+'. افحص إعدادات Worker والحصة المجانية ثم أعد فحص Turnstile.',true)}
- finally{button.disabled=false;button.textContent='توليد بالذكاء الاصطناعي'}
+ finally{try{window.turnstile?.reset(turnstileWidgetId)}catch(_){}turnstileToken='';button.disabled=false;button.textContent='توليد بالذكاء الاصطناعي'}
 };
 if(geminiSettings.siteKey){if(window.turnstile)renderTurnstileWidget();else loadTurnstileScript()}
 
