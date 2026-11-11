@@ -6,6 +6,8 @@ on:
       - "nexus/**"
     paths:
       - "index.html"
+      - "hybrid.html"
+      - "tests/hybrid-router.test.mjs"
       - "i18n.js"
       - "tests/site-diagnostics.test.mjs"
       - ".github/workflows/site-diagnostics.yml"
@@ -14,6 +16,8 @@ on:
       - main
     paths:
       - "index.html"
+      - "hybrid.html"
+      - "tests/hybrid-router.test.mjs"
       - "i18n.js"
       - "tests/site-diagnostics.test.mjs"
       - ".github/workflows/site-diagnostics.yml"
@@ -33,4 +37,4 @@ jobs:
         with:
           node-version: "22"
       - name: Run static site diagnostics tests
-        run: node --test tests/site-diagnostics.test.mjs
+        run: node --test tests/site-diagnostics.test.mjs tests/hybrid-router.test.mjs
