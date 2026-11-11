@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-def test_python_multipart_minimum_version_includes_cve_2026_42561_fix():
+def test_python_multipart_minimum_version_covers_known_2026_advisories():
     requirements = Path(__file__).with_name("requirements.txt").read_text(encoding="utf-8")
     dependency = next(
         (line.strip() for line in requirements.splitlines()
@@ -14,6 +14,8 @@ def test_python_multipart_minimum_version_includes_cve_2026_42561_fix():
 
     minimum = dependency.split(">=", 1)[1].split(",", 1)[0].strip()
     version = tuple(int(part) for part in minimum.split("."))
-    assert version >= (0, 0, 27), (
-        "CVE-2026-42561 affects python-multipart versions below 0.0.27"
+    assert version >= (0, 0, 31), (
+        "Known 2026 python-multipart advisories require >=0.0.31: "
+        "CVE-2026-42561, CVE-2026-53537, CVE-2026-53538, "
+        "CVE-2026-53539, and CVE-2026-53540"
     )
