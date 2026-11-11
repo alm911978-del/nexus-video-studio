@@ -6,6 +6,8 @@ on:
       - "nexus/**"
     paths:
       - "index.html"
+      - "hybrid.html"
+      - "tests/hybrid-router.test.mjs"
       - "i18n.js"
       - "tests/site-diagnostics.test.mjs"
       - ".github/workflows/site-diagnostics.yml"
@@ -14,6 +16,8 @@ on:
       - main
     paths:
       - "index.html"
+      - "hybrid.html"
+      - "tests/hybrid-router.test.mjs"
       - "i18n.js"
       - "tests/site-diagnostics.test.mjs"
       - ".github/workflows/site-diagnostics.yml"
