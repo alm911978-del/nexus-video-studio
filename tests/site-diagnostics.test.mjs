@@ -56,3 +56,25 @@ test("diagnostics controls have translations for supported languages", () => {
   assert.match(i18n, /'تنزيل تقرير JSON':'Descargar informe JSON'/);
 });
 
+
+test("static form labels reference existing controls or contain a labelable control", () => {
+  const ids = new Set([...html.matchAll(/\bid=["']([^"']+)["']/g)].map(match => match[1]));
+  const labels = [...html.matchAll(/<label\b([^>]*)>([\s\S]*?)<\/label>/gi)];
+  assert.ok(labels.length > 0, "expected static form labels");
+  for (const [, attributes, content] of labels) {
+    const target = attributes.match(/\bfor=["']([^"']+)["']/i)?.[1];
+    if (target) {
+      assert.ok(ids.has(target), "label target does not exist: " + target);
+    } else {
+      assert.match(content, /<(input|textarea|select)\b/i, "label must contain a labelable control");
+    }
+  }
+});
+
+test("Turnstile widget is exposed as a labelled group", () => {
+  const widget = html.match(/<div\b(?=[^>]*\bid=["']assistantTurnstileWidget["'])[^>]*>/i)?.[0] || "";
+  assert.match(widget, /\brole=["']group["']/i);
+  const labelId = widget.match(/\baria-labelledby=["']([^"']+)["']/i)?.[1];
+  assert.ok(labelId, "Turnstile group must reference its visible label");
+  assert.match(html, new RegExp('id="' + labelId + '"'));
+});
