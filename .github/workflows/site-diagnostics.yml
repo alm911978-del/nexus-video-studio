@@ -37,4 +37,4 @@ jobs:
         with:
           node-version: "22"
       - name: Run static site diagnostics tests
-        run: node --test tests/site-diagnostics.test.mjs
+        run: node --test tests/site-diagnostics.test.mjs tests/hybrid-router.test.mjs
