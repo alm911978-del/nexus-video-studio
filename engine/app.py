@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import os
 import shutil
 import subprocess
@@ -81,6 +82,12 @@ def _has_audio_stream(video_path: Path) -> bool:
     if probe.returncode != 0:
         raise HTTPException(status_code=422, detail="The uploaded video could not be inspected.")
     return bool(probe.stdout.strip())
+
+
+def _validate_audio_start_seconds(value: float) -> None:
+    """Reject non-finite offsets before they reach integer conversion or FFmpeg."""
+    if not math.isfinite(value) or value < 0 or value > 3600:
+        raise HTTPException(status_code=400, detail="audio_start_seconds must be a finite value between 0 and 3600.")
 
 
 @app.get("/health")
@@ -171,8 +178,7 @@ async def mux_audio(
             status_code=503,
             detail="FFmpeg is not installed on this backend. Audio mux is unavailable.",
         )
-    if audio_start_seconds < 0 or audio_start_seconds > 3600:
-        raise HTTPException(status_code=400, detail="audio_start_seconds must be between 0 and 3600.")
+    _validate_audio_start_seconds(audio_start_seconds)
     if not video.filename or Path(video.filename).suffix.lower() not in {".mp4", ".mov", ".m4v"}:
         raise HTTPException(status_code=400, detail="Video must be an MP4/MOV/M4V file.")
     if not audio.filename or Path(audio.filename).suffix.lower() not in {".wav", ".mp3", ".m4a", ".aac", ".ogg", ".flac"}:

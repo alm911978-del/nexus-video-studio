@@ -1,4 +1,5 @@
 import json
+import math
 
 import pytest
 from fastapi import HTTPException
@@ -13,6 +14,19 @@ def fake_mp4():
 
 def fake_webm():
     return bytes.fromhex("1A45DFA3") + (b"\x00" * 24)
+
+
+@pytest.mark.parametrize("value", [math.nan, math.inf, -math.inf, -0.01, 3600.01])
+def test_audio_start_seconds_rejects_non_finite_or_out_of_range_values(value):
+    with pytest.raises(HTTPException) as exc:
+        engine_app._validate_audio_start_seconds(value)
+
+    assert exc.value.status_code == 400
+
+
+@pytest.mark.parametrize("value", [0.0, 1.5, 3600.0])
+def test_audio_start_seconds_accepts_finite_values_in_range(value):
+    engine_app._validate_audio_start_seconds(value)
 
 
 @pytest.mark.parametrize(
