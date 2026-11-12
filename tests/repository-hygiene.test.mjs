@@ -39,8 +39,11 @@ test("safe environment examples remain eligible for version control", () => {
   for (const path of [
     ".env.example",
     "worker/.env.example",
+    "worker/.env.production.example",
+    "engine/.env.example",
     ".env.production.example",
     ".dev.vars.example",
+    "worker/.dev.vars.example",
   ]) {
     assert.equal(isIgnored(path), false, `${path} should remain trackable`);
   }
