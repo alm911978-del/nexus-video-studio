@@ -1,0 +1,33 @@
+# Local environment files and secrets; keep safe examples tracked.
+.env
+.env.*
+!.env.example
+!.env.*.example
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+
+# Python virtual environments and generated caches.
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# JavaScript dependencies and Cloudflare local state.
+node_modules/
+.wrangler/
+
+# Generated outputs, temporary work files, and logs.
+outputs/
+renders/
+uploads/
+tmp/
+temp/
+*.log
+
+# Local coverage artifacts.
+.coverage
+htmlcov/
