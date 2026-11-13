@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "feature/nexus-video-engine-v1"
+      - "nexus/engine-docker-provider-copy-20261113"
     paths:
       - "engine/**"
       - ".github/workflows/engine-tests.yml"
@@ -20,7 +21,7 @@ permissions:
 jobs:
   engine-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Check out repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -36,3 +37,29 @@ jobs:
       - name: Run engine validation tests
         run: python -m pytest -q test_app_validation.py
         working-directory: engine
+      - name: Build engine Docker image
+        run: docker build --tag nexus-engine-ci .
+        working-directory: engine
+      - name: Verify Docker container startup and health endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --detach --name nexus-engine-ci --publish 127.0.0.1:8000:8000 nexus-engine-ci
+          cleanup() {
+            docker stop nexus-engine-ci >/dev/null 2>&1 || true
+            docker rm nexus-engine-ci >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+          for attempt in $(seq 1 25); do
+            if curl --fail --silent http://127.0.0.1:8000/health > /tmp/nexus-engine-health.json; then
+              cat /tmp/nexus-engine-health.json
+              exit 0
+            fi
+            if [ "$(docker inspect -f '{{.State.Running}}' nexus-engine-ci 2>/dev/null || true)" != "true" ]; then
+              docker logs nexus-engine-ci
+              exit 1
+            fi
+            sleep 1
+          done
+          docker logs nexus-engine-ci
+          exit 1
