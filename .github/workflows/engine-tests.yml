@@ -5,6 +5,7 @@ on:
     branches:
       - "feature/nexus-video-engine-v1"
       - "nexus/engine-docker-provider-copy-20261113"
+      - "nexus/engine-container-nonroot-20261113"
     paths:
       - "engine/**"
       - ".github/workflows/engine-tests.yml"
@@ -40,6 +41,10 @@ jobs:
       - name: Build engine Docker image
         run: docker build --tag nexus-engine-ci .
         working-directory: engine
+      - name: Verify image uses an unprivileged runtime user
+        run: |
+          image_user="$(docker image inspect --format '{{.Config.User}}' nexus-engine-ci)"
+          test "$image_user" = "10001:10001"
       - name: Verify Docker container startup and health endpoint
         shell: bash
         run: |
@@ -50,6 +55,8 @@ jobs:
             docker rm nexus-engine-ci >/dev/null 2>&1 || true
           }
           trap cleanup EXIT
+          runtime_uid="$(docker exec nexus-engine-ci python -c 'import os; print(os.getuid())')"
+          test "$runtime_uid" = "10001"
           for attempt in $(seq 1 25); do
             if curl --fail --silent http://127.0.0.1:8000/health > /tmp/nexus-engine-health.json; then
               cat /tmp/nexus-engine-health.json
