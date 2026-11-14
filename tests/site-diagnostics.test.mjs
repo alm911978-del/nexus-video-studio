@@ -57,7 +57,7 @@ test("diagnostics controls have translations for supported languages", () => {
 });
 
 test("Supabase browser SDK is pinned to the reviewed exact release", () => {
-  const sources = [...html.matchAll(/<script\\b[^>]*\\bsrc=["']([^"']*supabase-js[^"']*)["'][^>]*>/gi)]
+  const sources = [...html.matchAll(/<script[^>]*src=["']([^"']*supabase-js[^"']*)["'][^>]*>/gi)]
     .map((match) => match[1]);
   assert.equal(sources.length, 1, "expected one Supabase browser SDK script");
   assert.equal(
