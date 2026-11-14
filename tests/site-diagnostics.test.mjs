@@ -56,3 +56,13 @@ test("diagnostics controls have translations for supported languages", () => {
   assert.match(i18n, /'تنزيل تقرير JSON':'Descargar informe JSON'/);
 });
 
+test("Supabase browser SDK is pinned to the reviewed exact release", () => {
+  const sources = [...html.matchAll(/<script[^>]*src=["']([^"']*supabase-js[^"']*)["'][^>]*>/gi)]
+    .map((match) => match[1]);
+  assert.equal(sources.length, 1, "expected one Supabase browser SDK script");
+  assert.equal(
+    sources[0],
+    "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0",
+    "review the SDK release before changing this exact version",
+  );
+});
