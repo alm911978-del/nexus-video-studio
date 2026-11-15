@@ -6,12 +6,14 @@ on:
       - "feature/nexus-video-engine-v1"
       - "nexus/engine-docker-provider-copy-20261113"
       - "nexus/engine-container-nonroot-20261113"
+      - "nexus/engine-security-floors-test-discovery-20261114"
     paths:
       - "engine/**"
       - ".github/workflows/engine-tests.yml"
   pull_request:
     branches:
       - main
+      - "nexus/engine-container-nonroot-20261113"
     paths:
       - "engine/**"
       - ".github/workflows/engine-tests.yml"
@@ -35,8 +37,8 @@ jobs:
       - name: Install engine dependencies
         run: python -m pip install -r requirements.txt
         working-directory: engine
-      - name: Run engine validation tests
-        run: python -m pytest -q test_app_validation.py
+      - name: Run complete engine test suite
+        run: python -m pytest -q
         working-directory: engine
       - name: Build engine Docker image
         run: docker build --tag nexus-engine-ci .
