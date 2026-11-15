@@ -260,7 +260,7 @@ $('draftScenePrompt').onclick=()=>{
   $('sPrompt').focus();
 };
 document.addEventListener('click',async e=>{let d=e.target.dataset;if(d.del){if(!confirm('هل تريد حذف هذا العنصر؟'))return;db[d.del==='project'?'projects':d.del==='character'?'characters':'scenes']=db[d.del==='project'?'projects':d.del==='character'?'characters':'scenes'].filter(x=>x.id!==d.id);save();render()}if(d.copy){let s=db.scenes.find(x=>x.id===d.copy);if(s){try{await navigator.clipboard.writeText(s.prompt);alert('تم نسخ وصف المشهد')}catch(_){prompt('انسخ وصف المشهد:',s.prompt)}}}});
-$('exportData').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nexus-video-backup.json';a.click();URL.revokeObjectURL(a.href);$('backupStatus').textContent='تم تجهيز ملف النسخة الاحتياطية.'};
+$('exportData').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nexus-video-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);$('backupStatus').textContent='تم تجهيز ملف النسخة الاحتياطية.'};
 function validBackupRecord(item, requiredFields, optionalFields=[]){
   return !!item && typeof item==='object' && !Array.isArray(item) &&
     typeof item.id==='string' && item.id.length>0 && item.id.length<=128 &&
@@ -324,7 +324,7 @@ ${idea}
 }
 $('buildWriter').onclick=()=>{$('wOutput').value=buildWriterPrompt()};
 $('copyWriter').onclick=async()=>{const v=$('wOutput').value||buildWriterPrompt();if(!v)return;$('wOutput').value=v;try{await navigator.clipboard.writeText(v);alert('تم نسخ الطلب')}catch(_){$('wOutput').focus();$('wOutput').select();alert('حددت النص؛ انسخه من القائمة')}};
-$('downloadWriter').onclick=()=>{const v=$('wOutput').value||buildWriterPrompt();if(!v)return;$('wOutput').value=v;const blob=new Blob([v],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='NEXUS-series-development.txt';a.click();URL.revokeObjectURL(a.href)};
+$('downloadWriter').onclick=()=>{const v=$('wOutput').value||buildWriterPrompt();if(!v)return;$('wOutput').value=v;const blob=new Blob([v],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='NEXUS-series-development.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
 
 const GEMINI_SETTINGS_KEY='nexus-gemini-settings-v1';
 let geminiSettings={endpoint:'',siteKey:'',provider:'gemini'},turnstileToken='',turnstileWidgetId=null,turnstileScriptRequested=false;

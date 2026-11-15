@@ -56,3 +56,9 @@ test("diagnostics controls have translations for supported languages", () => {
   assert.match(i18n, /'تنزيل تقرير JSON':'Descargar informe JSON'/);
 });
 
+test("backup and writer downloads defer Blob URL revocation", () => {
+  const delayedCleanup = html.split("a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)").length - 1;
+  const immediateCleanup = html.split("a.click();URL.revokeObjectURL(a.href)").length - 1;
+  assert.equal(delayedCleanup, 2, "both downloadable exports should retain their Blob URLs briefly");
+  assert.equal(immediateCleanup, 0, "do not revoke a download URL in the same task as click()");
+});
