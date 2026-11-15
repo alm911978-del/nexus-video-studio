@@ -10,6 +10,8 @@ on:
       - "tests/hybrid-router.test.mjs"
       - "i18n.js"
       - "tests/site-diagnostics.test.mjs"
+      - "tests/repository-hygiene.test.mjs"
+      - ".gitignore"
       - ".github/workflows/site-diagnostics.yml"
   pull_request:
     branches:
@@ -20,6 +22,8 @@ on:
       - "tests/hybrid-router.test.mjs"
       - "i18n.js"
       - "tests/site-diagnostics.test.mjs"
+      - "tests/repository-hygiene.test.mjs"
+      - ".gitignore"
       - ".github/workflows/site-diagnostics.yml"
 
 permissions:
@@ -37,4 +41,4 @@ jobs:
         with:
           node-version: "22"
       - name: Run static site diagnostics tests
-        run: node --test tests/site-diagnostics.test.mjs tests/hybrid-router.test.mjs
+        run: node --test tests/site-diagnostics.test.mjs tests/hybrid-router.test.mjs tests/repository-hygiene.test.mjs
