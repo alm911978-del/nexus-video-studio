@@ -120,7 +120,7 @@ test("answers CORS preflight only for the configured origin", async () => {
 });
 
 test("rejects oversized generation payloads", async () => {
-  const body = JSON.stringify({ action: "series", prompt: "x".repeat(21_000), turnstileToken: "test" });
+  const body = JSON.stringify({ action: "series", prompt: "x".repeat(70_000), turnstileToken: "test" });
   const res = await worker.fetch(req("/api/generate", {
     method: "POST",
     body,
@@ -153,6 +153,43 @@ test("rejects oversized streamed payloads without relying on Content-Length", as
   }), env);
   assert.equal(res.status, 413);
   assert.equal(cancelled, true, "oversized request stream should be cancelled");
+});
+
+test("accepts a 10,000-character Arabic prompt within the advertised prompt limit", async () => {
+  const prompt = "ا".repeat(10_000);
+  const payload = { action: "general", prompt, turnstileToken: "valid-token" };
+  const serialized = JSON.stringify(payload);
+  assert.ok(new TextEncoder().encode(serialized).byteLength > 20_000);
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, options = {}) => {
+    const target = String(url);
+    if (target.includes("challenges.cloudflare.com/turnstile/v0/siteverify")) {
+      return new Response(JSON.stringify({ success: true, hostname: "alm911978-del.github.io" }), {
+        status: 200, headers: { "content-type": "application/json" }
+      });
+    }
+    if (target.includes("generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent")) {
+      const upstreamPayload = JSON.parse(options.body);
+      assert.equal(upstreamPayload.contents[0].parts[0].text, prompt);
+      return new Response(JSON.stringify({
+        candidates: [{ content: { parts: [{ text: "ARABIC_PROMPT_ACCEPTED" }] } }]
+      }), { status: 200, headers: { "content-type": "application/json" } });
+    }
+    throw new Error("Unexpected outbound request");
+  };
+
+  try {
+    const res = await worker.fetch(req("/api/generate", {
+      method: "POST",
+      body: serialized,
+      headers: { "content-type": "application/json" }
+    }), env);
+    assert.equal(res.status, 200);
+    assert.equal((await res.json()).text, "ARABIC_PROMPT_ACCEPTED");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test("enforces daily IP rate limit after successful Turnstile verification", async () => {
