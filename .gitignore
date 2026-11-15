@@ -6,6 +6,7 @@
 .dev.vars
 .dev.vars.*
 !.dev.vars.example
+!.dev.vars.*.example
 
 # Python virtual environments and generated caches.
 .venv/
