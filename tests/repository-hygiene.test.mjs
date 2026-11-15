@@ -27,9 +27,11 @@ test("local environment files are ignored at root and in nested workspaces", () 
     ".env.production",
     ".dev.vars",
     ".dev.vars.local",
+    ".dev.vars.production",
     "worker/.env",
     "engine/.env",
     "worker/.dev.vars",
+    "worker/.dev.vars.production",
   ]) {
     assert.equal(isIgnored(path), true, `${path} should be ignored`);
   }
@@ -43,7 +45,9 @@ test("safe environment examples remain eligible for version control", () => {
     "engine/.env.example",
     ".env.production.example",
     ".dev.vars.example",
+    ".dev.vars.production.example",
     "worker/.dev.vars.example",
+    "worker/.dev.vars.production.example",
   ]) {
     assert.equal(isIgnored(path), false, `${path} should remain trackable`);
   }
