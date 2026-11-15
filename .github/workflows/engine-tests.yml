@@ -5,6 +5,7 @@ on:
     branches:
       - "feature/nexus-video-engine-v1"
       - "nexus/engine-multipart-cve-fix-20261107"
+      - "nexus/engine-multipart-20261111-advisories"
     paths:
       - "engine/**"
       - ".github/workflows/engine-tests.yml"
