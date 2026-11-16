@@ -66,3 +66,31 @@ test("backup and writer downloads defer Blob URL revocation", () => {
   assert.equal(delayedCleanup, 2, "both downloadable exports should retain their Blob URLs briefly");
   assert.equal(immediateCleanup, 0, "do not revoke a download URL in the same task as click()");
 });
+
+test("static form labels reference existing controls or contain a labelable control", () => {
+  const ids = new Set([...html.matchAll(/\bid=["']([^"']+)["']/g)].map(match => match[1]));
+  const labels = [...html.matchAll(/<label\b([^>]*)>([\s\S]*?)<\/label>/gi)];
+  assert.ok(labels.length > 0, "expected static form labels");
+  for (const [, attributes, content] of labels) {
+    const target = attributes.match(/\bfor=["']([^"']+)["']/i)?.[1];
+    if (target) {
+      assert.ok(ids.has(target), "label target does not exist: " + target);
+    } else {
+      assert.match(content, /<(input|textarea|select)\b/i, "label must contain a labelable control");
+    }
+  }
+});
+
+test("Turnstile widget is exposed as a labelled group", () => {
+  const widget = html.match(/<div\b(?=[^>]*\bid=["']assistantTurnstileWidget["'])[^>]*>/i)?.[0] || "";
+  assert.match(widget, /\brole=["']group["']/i);
+  const labelId = widget.match(/\baria-labelledby=["']([^"']+)["']/i)?.[1];
+  assert.ok(labelId, "Turnstile group must reference its visible label");
+  assert.match(html, new RegExp('id="' + labelId + '"'));
+});
+
+test("keyboard users can skip the site header and reach the main content", () => {
+  assert.match(html, /<a class="skip-link" href="#mainContent">تجاوز إلى المحتوى الرئيسي<\/a>/);
+  assert.match(html, /<header class="top"[\s\S]*?<main id="mainContent" tabindex="-1">/);
+  assert.match(html, /\.skip-link:focus\{top:12px/);
+});
