@@ -4,6 +4,8 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
+const workerReadme = await readFile(new URL("../worker/README.md", import.meta.url), "utf8");
+const workerSource = await readFile(new URL("../worker/src/index.js", import.meta.url), "utf8");
 
 function isIgnored(relativePath) {
   const result = spawnSync(
@@ -72,4 +74,11 @@ test("generated dependencies, caches, media outputs, and logs are ignored", () =
   ]) {
     assert.equal(isIgnored(path), true, `${path} should be ignored`);
   }
+});
+
+
+test("Worker documentation matches the enforced streamed request-body limit", () => {
+  assert.match(workerSource, /const MAX_BODY_BYTES = 64 \* 1024;/);
+  assert.match(workerReadme, /64 KiB maximum streamed request body/);
+  assert.doesNotMatch(workerReadme, /20 KB maximum body/);
 });
