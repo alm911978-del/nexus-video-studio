@@ -41,7 +41,7 @@ When prompted for each secret, paste it only into the terminal prompt. Do not pu
 ## Security controls
 - Exact Origin allowlist; CORS preflight handling.
 - POST-only generation endpoint and JSON content-type enforcement.
-- 20 KB maximum body and 12,000-character prompt limit.
+- 64 KiB maximum streamed request body and 12,000-character prompt limit. The stream is bounded even when `Content-Length` is missing.
 - Turnstile server-side verification and optional hostname check.
 - Daily IP-based request cap using KV (best-effort; simultaneous requests may race).
 - Server-only provider secrets; fixed provider endpoints/models and fixed task system instructions.
