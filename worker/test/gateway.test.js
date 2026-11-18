@@ -34,6 +34,39 @@ test("rejects unapproved origin", async () => {
   assert.equal(res.status, 403);
 });
 
+test("successful generation responses keep no-store, nosniff, referrer, and CORS headers", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    const target = String(url);
+    if (target.includes("challenges.cloudflare.com/turnstile/v0/siteverify")) {
+      return new Response(JSON.stringify({ success: true, hostname: "alm911978-del.github.io" }), {
+        status: 200, headers: { "content-type": "application/json" }
+      });
+    }
+    if (target.includes("generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent")) {
+      return new Response(JSON.stringify({
+        candidates: [{ content: { parts: [{ text: "SECURITY_HEADERS_OK" }] } }]
+      }), { status: 200, headers: { "content-type": "application/json" } });
+    }
+    throw new Error("Unexpected outbound request");
+  };
+  try {
+    const res = await worker.fetch(req("/api/generate", {
+      method: "POST",
+      body: JSON.stringify({ action: "general", prompt: "test", turnstileToken: "valid-token" }),
+      headers: { "content-type": "application/json" }
+    }), env);
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get("cache-control"), "no-store");
+    assert.equal(res.headers.get("x-content-type-options"), "nosniff");
+    assert.equal(res.headers.get("referrer-policy"), "no-referrer");
+    assert.equal(res.headers.get("access-control-allow-origin"), env.ALLOWED_ORIGINS);
+    assert.equal((await res.json()).text, "SECURITY_HEADERS_OK");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("rejects unsupported route", async () => {
   const res = await worker.fetch(req("/unknown"), env);
   assert.equal(res.status, 404);
