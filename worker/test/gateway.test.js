@@ -370,6 +370,21 @@ test("NEXUS visual layer ships the brand assets, dashboard, and honest backend s
 });
 
 
+
+
+test("error responses preserve security headers and configured CORS", async () => {
+  const res = await worker.fetch(req("/api/generate", {
+    method: "POST",
+    body: JSON.stringify({ action: "general", prompt: "test" }),
+    headers: { "content-type": "application/json" }
+  }), { ...env, TURNSTILE_SECRET_KEY: undefined, RATE_LIMITS: undefined });
+  assert.equal(res.status, 503);
+  assert.equal(res.headers.get("cache-control"), "no-store");
+  assert.equal(res.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(res.headers.get("referrer-policy"), "no-referrer");
+  assert.equal(res.headers.get("access-control-allow-origin"), "https://alm911978-del.github.io");
+  assert.equal(res.headers.get("vary"), "Origin");
+});
 test("health response includes no-store and anti-sniffing security headers", async () => {
   const res = await worker.fetch(req("/api/health"), env);
   assert.equal(res.status, 200);
