@@ -34,6 +34,18 @@ test("rejects unapproved origin", async () => {
   assert.equal(res.status, 403);
 });
 
+test("unapproved origins do not receive reflected CORS or cacheable error responses", async () => {
+  const res = await worker.fetch(new Request("https://worker.example/api/health", {
+    headers: { Origin: "https://evil.example" }
+  }), env);
+  assert.equal(res.status, 403);
+  assert.equal(res.headers.get("access-control-allow-origin"), "");
+  assert.equal(res.headers.get("cache-control"), "no-store");
+  assert.equal(res.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(res.headers.get("referrer-policy"), "no-referrer");
+  assert.equal(res.headers.get("vary"), "Origin");
+});
+
 test("rejects unsupported route", async () => {
   const res = await worker.fetch(req("/unknown"), env);
   assert.equal(res.status, 404);
