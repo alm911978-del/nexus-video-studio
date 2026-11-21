@@ -109,14 +109,26 @@ test("published HTML inline JavaScript parses and includes secure Gemini control
   assert.doesNotMatch(html, /\bAIza[0-9A-Za-z_-]{35}\b/, "do not embed a Google API key in public HTML");
 });
 
-test("answers CORS preflight only for the configured origin", async () => {
+test("answers CORS preflight only for the configured origin and keeps security headers", async () => {
   const good = await worker.fetch(req("/api/generate", { method: "OPTIONS" }), env);
   assert.equal(good.status, 204);
+  assert.equal(good.headers.get("access-control-allow-origin"), env.ALLOWED_ORIGINS);
+  assert.equal(good.headers.get("access-control-allow-methods"), "POST, GET, OPTIONS");
+  assert.equal(good.headers.get("access-control-allow-headers"), "content-type");
+  assert.equal(good.headers.get("access-control-max-age"), "86400");
+  assert.equal(good.headers.get("cache-control"), "no-store");
+  assert.equal(good.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(good.headers.get("referrer-policy"), "no-referrer");
+
   const bad = await worker.fetch(new Request("https://worker.example/api/generate", {
     method: "OPTIONS",
     headers: { Origin: "https://evil.example" }
   }), env);
   assert.equal(bad.status, 403);
+  assert.equal(bad.headers.get("cache-control"), "no-store");
+  assert.equal(bad.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(bad.headers.get("referrer-policy"), "no-referrer");
+  assert.equal(bad.headers.get("access-control-allow-origin"), null);
 });
 
 test("rejects oversized generation payloads", async () => {
