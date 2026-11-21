@@ -140,8 +140,26 @@ export default {
     const origin = allowedOrigin(request, env);
     const rawOrigin = request.headers.get("Origin") || "";
     if (request.method === "OPTIONS") {
-      if (!origin) return new Response(null, { status: 403 });
-      return new Response(null, { status: 204, headers: corsHeaders(origin) });
+      if (!origin) {
+        return new Response(null, {
+          status: 403,
+          headers: {
+            "cache-control": "no-store",
+            "x-content-type-options": "nosniff",
+            "referrer-policy": "no-referrer",
+            "vary": "Origin"
+          }
+        });
+      }
+      return new Response(null, {
+        status: 204,
+        headers: {
+          ...corsHeaders(origin),
+          "cache-control": "no-store",
+          "x-content-type-options": "nosniff",
+          "referrer-policy": "no-referrer"
+        }
+      });
     }
     if (!origin) return json({ error: "Origin not allowed." }, 403);
     const url = new URL(request.url);
