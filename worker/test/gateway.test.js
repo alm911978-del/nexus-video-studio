@@ -427,3 +427,55 @@ test("rejects a Turnstile token verified for the wrong hostname", async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("accepts the exact 12,000-character prompt limit before provider verification", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    if (String(url).includes("challenges.cloudflare.com/turnstile/v0/siteverify")) {
+      return new Response(JSON.stringify({ success: true, hostname: "alm911978-del.github.io" }), {
+        status: 200, headers: { "content-type": "application/json" }
+      });
+    }
+    if (String(url).includes("generativelanguage.googleapis.com")) {
+      return new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: "BOUNDARY_OK" }] } }] }), {
+        status: 200, headers: { "content-type": "application/json" }
+      });
+    }
+    throw new Error("Unexpected outbound request");
+  };
+  try {
+    const prompt = "x".repeat(12_000);
+    const res = await worker.fetch(req("/api/generate", {
+      method: "POST",
+      body: JSON.stringify({ action: "general", prompt, turnstileToken: "valid-token" }),
+      headers: { "content-type": "application/json" }
+    }), env);
+    assert.equal(res.status, 200);
+    assert.equal((await res.json()).text, "BOUNDARY_OK");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("rejects a 12,001-character prompt before external verification", async () => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    throw new Error("External verification must not run for an oversized prompt");
+  };
+  try {
+    const prompt = "x".repeat(12_001);
+    const res = await worker.fetch(req("/api/generate", {
+      method: "POST",
+      body: JSON.stringify({ action: "general", prompt, turnstileToken: "valid-token" }),
+      headers: { "content-type": "application/json" }
+    }), env);
+    assert.equal(res.status, 400);
+    assert.match((await res.json()).error, /12000/);
+    assert.equal(calls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
