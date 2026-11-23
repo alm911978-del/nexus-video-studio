@@ -427,3 +427,41 @@ test("rejects a Turnstile token verified for the wrong hostname", async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+test("does not expose provider secrets or raw upstream response text on provider errors", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    const target = String(url);
+    if (target.includes("challenges.cloudflare.com/turnstile/v0/siteverify")) {
+      return new Response(JSON.stringify({ success: true, hostname: "alm911978-del.github.io" }), {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      });
+    }
+    if (target.includes("generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent")) {
+      return new Response(JSON.stringify({
+        error: {
+          message: "upstream diagnostic contains fake-test-key and internal provider details"
+        }
+      }), {
+        status: 401,
+        headers: { "content-type": "application/json" }
+      });
+    }
+    throw new Error("Unexpected outbound request");
+  };
+  try {
+    const res = await worker.fetch(req("/api/generate", {
+      method: "POST",
+      body: JSON.stringify({ action: "general", prompt: "test", turnstileToken: "valid-token" }),
+      headers: { "content-type": "application/json" }
+    }), env);
+    assert.equal(res.status, 502);
+    const bodyText = await res.text();
+    assert.doesNotMatch(bodyText, /fake-test-key/);
+    assert.doesNotMatch(bodyText, /internal provider details/);
+    assert.match(bodyText, /rejected its server API key/);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
