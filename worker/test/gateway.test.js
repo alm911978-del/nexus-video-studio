@@ -427,3 +427,29 @@ test("rejects a Turnstile token verified for the wrong hostname", async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("rejects an oversized Turnstile token before contacting verification or an AI provider", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url) => {
+    calls.push(String(url));
+    throw new Error("oversized Turnstile tokens must be rejected before outbound calls");
+  };
+  try {
+    const res = await worker.fetch(req("/api/generate", {
+      method: "POST",
+      body: JSON.stringify({
+        action: "general",
+        prompt: "test",
+        turnstileToken: "x".repeat(2049)
+      }),
+      headers: { "content-type": "application/json" }
+    }), env);
+    assert.equal(res.status, 403);
+    assert.match((await res.json()).error, /Security check failed/);
+    assert.deepEqual(calls, []);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
