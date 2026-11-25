@@ -427,3 +427,30 @@ test("rejects a Turnstile token verified for the wrong hostname", async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("rejects an unsupported provider before security verification or outbound calls", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url) => {
+    calls.push(String(url));
+    throw new Error("No outbound call expected for an unsupported provider");
+  };
+  try {
+    const res = await worker.fetch(req("/api/generate", {
+      method: "POST",
+      body: JSON.stringify({
+        action: "general",
+        prompt: "test",
+        provider: "unknown-provider",
+        turnstileToken: "should-not-be-checked"
+      }),
+      headers: { "content-type": "application/json" }
+    }), env);
+    assert.equal(res.status, 400);
+    assert.match((await res.json()).error, /Unsupported provider/);
+    assert.equal(calls.length, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
