@@ -427,3 +427,38 @@ test("rejects a Turnstile token verified for the wrong hostname", async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("rejects successful upstream responses that contain no generated text", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url, options = {}) => {
+    const target = String(url);
+    calls.push(target);
+    if (target.includes("challenges.cloudflare.com/turnstile/v0/siteverify")) {
+      return new Response(JSON.stringify({ success: true, hostname: "alm911978-del.github.io" }), {
+        status: 200, headers: { "content-type": "application/json" }
+      });
+    }
+    if (target.includes("generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent")) {
+      return new Response(JSON.stringify({ candidates: [{ content: { parts: [] } }] }), {
+        status: 200, headers: { "content-type": "application/json" }
+      });
+    }
+    throw new Error("Unexpected outbound request");
+  };
+  try {
+    const res = await worker.fetch(req("/api/generate", {
+      method: "POST",
+      body: JSON.stringify({ action: "general", prompt: "test", turnstileToken: "valid-token" }),
+      headers: { "content-type": "application/json" }
+    }), env);
+    assert.equal(res.status, 502);
+    assert.deepEqual(await res.json(), {
+      error: "The selected provider returned no text. The request may have been blocked or truncated."
+    });
+    assert.equal(calls.length, 2);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
