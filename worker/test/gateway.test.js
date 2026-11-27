@@ -427,3 +427,40 @@ test("rejects a Turnstile token verified for the wrong hostname", async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("rejects invalid upstream JSON without exposing parser details", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url) => {
+    const target = String(url);
+    calls.push(target);
+    if (target.includes("challenges.cloudflare.com/turnstile/v0/siteverify")) {
+      return new Response(JSON.stringify({ success: true, hostname: "alm911978-del.github.io" }), {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      });
+    }
+    if (target.includes("generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent")) {
+      return new Response("{not-json", {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      });
+    }
+    throw new Error("Unexpected outbound request");
+  };
+  try {
+    const res = await worker.fetch(req("/api/generate", {
+      method: "POST",
+      body: JSON.stringify({ action: "general", prompt: "test", turnstileToken: "valid-token" }),
+      headers: { "content-type": "application/json" }
+    }), env);
+    assert.equal(res.status, 502);
+    const body = await res.json();
+    assert.equal(body.error, "The selected provider returned invalid JSON.");
+    assert.equal(JSON.stringify(body).includes("SyntaxError"), false);
+    assert.equal(calls.length, 2);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
